@@ -110,9 +110,9 @@ export function Footer() {
       <div className="relative mx-auto flex max-w-7xl flex-col items-center gap-1.5 border-t border-gold/10 px-4 py-3 text-xs text-zinc-500 md:px-8">
         <div className="w-full">
           <p className="text-center font-semibold text-zinc-200">&copy; {currentYear} GRAVEN METAL. All rights reserved.</p>
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1.5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">We Accept:</p>
-            <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
               {paymentMethods.map((method) => (
                 <a
                   key={method.label}
@@ -120,7 +120,7 @@ export function Footer() {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={`Open ${method.label} website`}
-                  className="group inline-flex h-7 items-center justify-center rounded px-1.5 transition duration-300 hover:bg-gold/5 hover:opacity-90 hover:shadow-[0_0_16px_rgba(214,176,92,0.2)]"
+                  className="group inline-flex h-7 items-center justify-center rounded px-0.5 transition duration-300 hover:bg-gold/5 hover:opacity-90 hover:shadow-[0_0_16px_rgba(214,176,92,0.2)]"
                 >
                   <img
                     src={method.src}
