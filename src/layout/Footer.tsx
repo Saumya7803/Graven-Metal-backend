@@ -21,7 +21,7 @@ const policyLinks = [
 
 const paymentMethods = [
   { label: 'Visa', src: '/icons/payment/visa.svg', href: 'https://www.visa.com', widthClass: 'w-[56px]' },
-  { label: 'Mastercard', src: '/icons/payment/mastercard.svg', href: 'https://www.mastercard.com', widthClass: 'w-[70px]' },
+  { label: 'Mastercard', src: '/icons/payment/mastercard.svg', href: 'https://www.mastercard.com', widthClass: 'w-[42px]' },
   {
     label: 'UPI',
     src: '/icons/payment/upi.svg',
@@ -34,7 +34,7 @@ const paymentMethods = [
     href: 'https://www.americanexpress.com',
     widthClass: 'w-[86px]',
   },
-  { label: 'RuPay', src: '/icons/payment/rupay.svg', href: 'https://www.rupay.co.in', widthClass: 'w-[64px]' },
+  { label: 'RuPay', src: '/icons/payment/rupay.svg', href: 'https://www.rupay.co.in', widthClass: 'w-[72px]' },
 ] as const;
 
 const currentYear = new Date().getFullYear();
