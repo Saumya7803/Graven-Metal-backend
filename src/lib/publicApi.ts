@@ -13,6 +13,8 @@ export type ApiProduct = {
   inStock?: boolean;
   image?: { url?: string; publicId?: string };
   category?: { _id: string; name: string; slug: string } | string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type ApiCategory = {
@@ -21,6 +23,11 @@ export type ApiCategory = {
   slug: string;
   description?: string;
   productCount?: number;
+  image?: { url?: string; publicId?: string };
+  sortOrder?: number;
+  metaTitle?: string;
+  metaDescription?: string;
+  createdAt?: string;
 };
 
 export type ApiBlog = {
@@ -31,6 +38,8 @@ export type ApiBlog = {
   content: string;
   thumbnail?: { url?: string; publicId?: string };
   coverImage?: string;
+  published?: boolean;
+  seo?: { metaTitle?: string; metaDescription?: string; metaKeywords?: string };
   createdAt?: string;
 };
 
