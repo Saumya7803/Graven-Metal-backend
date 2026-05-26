@@ -1,0 +1,59 @@
+import { User } from '../models/User.js';
+import { signToken } from '../utils/jwt.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+
+function formatAuthResponse(user) {
+  const token = signToken({ id: user._id, role: user.role, permissions: user.permissions });
+  return {
+    token,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      permissions: user.permissions,
+    },
+  };
+}
+
+async function loginByRole(email, password, allowedRoles) {
+  const user = await User.findOne({ email });
+  if (!user || !(await user.comparePassword(password))) {
+    return { error: 'Invalid credentials' };
+  }
+  if (!allowedRoles.includes(user.role)) {
+    return { error: 'Unauthorized role for this login portal' };
+  }
+  return { data: formatAuthResponse(user) };
+}
+
+export const login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+  const result = await loginByRole(email, password, ['super_admin', 'admin', 'editor']);
+  if (result.error) {
+    return res.status(401).json({ message: result.error });
+  }
+  res.json(result.data);
+});
+
+export const loginAdmin = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+  const result = await loginByRole(email, password, ['admin', 'editor']);
+  if (result.error) {
+    return res.status(401).json({ message: result.error });
+  }
+  res.json(result.data);
+});
+
+export const loginSuperAdmin = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+  const result = await loginByRole(email, password, ['super_admin']);
+  if (result.error) {
+    return res.status(401).json({ message: result.error });
+  }
+  res.json(result.data);
+});
+
+export const me = asyncHandler(async (req, res) => {
+  res.json({ user: req.user });
+});
