@@ -3,12 +3,13 @@ import { body, param } from 'express-validator';
 import {
   createQuote,
   deleteQuote,
+  getMyQuotes,
   getQuoteById,
   getQuotes,
   updateQuote,
   updateQuoteStatus,
 } from '../controllers/quoteController.js';
-import { authorize, authorizePermission, protect } from '../middlewares/authMiddleware.js';
+import { authorize, authorizePermission, optionalProtect, protect } from '../middlewares/authMiddleware.js';
 import { validate } from '../middlewares/validateMiddleware.js';
 import { PERMISSIONS } from '../constants/permissions.js';
 import { uploadAttachment, validateUploadedFile } from '../middlewares/uploadMiddleware.js';
@@ -17,6 +18,7 @@ const router = Router();
 
 router.post(
   '/',
+  optionalProtect,
   uploadAttachment.single('file'),
   validateUploadedFile('attachment'),
   [
@@ -30,6 +32,8 @@ router.post(
   validate,
   createQuote,
 );
+
+router.get('/mine', protect, authorize('user'), getMyQuotes);
 
 router.get(
   '/',

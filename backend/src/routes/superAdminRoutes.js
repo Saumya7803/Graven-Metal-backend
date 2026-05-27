@@ -7,6 +7,7 @@ import {
   deleteAdmin,
   deleteUser,
   getAnalytics,
+  getCustomerActivity,
   getSEO,
   getSettings,
   listAdmins,
@@ -46,6 +47,7 @@ router.patch(
 );
 
 router.get('/users', listUsers);
+router.get('/customer-activity', getCustomerActivity);
 router.patch(
   '/users/:id',
   [

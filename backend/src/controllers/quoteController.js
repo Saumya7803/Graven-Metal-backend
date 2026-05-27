@@ -19,6 +19,13 @@ const attachmentMimeTypes = [
 
 export const createQuote = asyncHandler(async (req, res) => {
   const payload = { ...req.body };
+  if (req.user?.role === 'user') {
+    payload.customer = req.user._id;
+    payload.fullName = payload.fullName || req.user.name;
+    payload.email = payload.email || req.user.email;
+    payload.phone = payload.phone || req.user.phone;
+  }
+
   const uploadedFile = await uploadBufferToCloudinary(req.file, {
     folder: 'graven-metal/quotes',
     resourceType: 'auto',
@@ -45,6 +52,14 @@ export const getQuotes = asyncHandler(async (req, res) => {
 
   const quotes = await Quote.find(filter).sort({ createdAt: -1 });
   return ok(res, 'Quotes fetched', quotes);
+});
+
+export const getMyQuotes = asyncHandler(async (req, res) => {
+  const quotes = await Quote.find({
+    $or: [{ customer: req.user._id }, { email: req.user.email }],
+  }).sort({ createdAt: -1 });
+
+  return ok(res, 'Customer quotes fetched', quotes);
 });
 
 export const getQuoteById = asyncHandler(async (req, res) => {

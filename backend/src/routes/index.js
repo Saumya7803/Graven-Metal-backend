@@ -7,10 +7,12 @@ import contactRoutes from './contactRoutes.js';
 import blogRoutes from './blogRoutes.js';
 import superAdminRoutes from './superAdminRoutes.js';
 import settingsRoutes from './settingsRoutes.js';
+import { apiRateLimit } from '../middlewares/securityMiddleware.js';
 
 const router = Router();
 
 router.use('/auth', authRoutes);
+router.use(apiRateLimit);
 router.use('/products', productRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/quotes', quoteRoutes);

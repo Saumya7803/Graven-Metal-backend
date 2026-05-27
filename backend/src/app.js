@@ -4,18 +4,20 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import apiRoutes from './routes/index.js';
 import { errorHandler } from './middlewares/errorMiddleware.js';
-import { apiRateLimit, sanitizeInput } from './middlewares/securityMiddleware.js';
+import { sanitizeInput } from './middlewares/securityMiddleware.js';
 
 export const createApp = () => {
   const app = express();
   const isProduction = process.env.NODE_ENV === 'production';
   const normalizeOrigin = (value) => value.replace(/\/+$/, '');
   const rawOrigins = process.env.CLIENT_URLS || process.env.CLIENT_URL || '';
-  const allowList = rawOrigins
+  const configuredOrigins = rawOrigins
     .split(',')
     .map((x) => x.trim())
     .map((x) => normalizeOrigin(x))
     .filter(Boolean);
+  const devOrigins = ['http://localhost:5173', 'http://localhost:5174'];
+  const allowList = Array.from(new Set(isProduction ? configuredOrigins : [...configuredOrigins, ...devOrigins]));
 
   const corsOptions = {
     origin(origin, callback) {
@@ -41,12 +43,20 @@ export const createApp = () => {
   );
   app.use(cors(corsOptions));
   app.set('trust proxy', 1);
-  app.use(apiRateLimit);
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(sanitizeInput);
   app.use(morgan(isProduction ? 'combined' : 'dev'));
 
+  app.get('/api', (req, res) => {
+    res.json({
+      ok: true,
+      service: 'graven-api',
+      endpoints: {
+        health: '/api/health',
+      },
+    });
+  });
   app.get('/api/health', (req, res) => res.json({ ok: true, service: 'graven-api' }));
   app.use('/api', apiRoutes);
 

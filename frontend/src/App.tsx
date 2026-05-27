@@ -1,5 +1,7 @@
 import { Suspense, lazy } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { AuthProvider } from './components/auth/AuthProvider';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { RouteLoader } from './components/ui/RouteLoader';
 
 const Layout = lazy(() => import('./layout/Layout').then((m) => ({ default: m.Layout })));
@@ -21,6 +23,10 @@ const QuoteRequestPage = lazy(() =>
 const ContactPage = lazy(() => import('./pages/ContactPage').then((m) => ({ default: m.ContactPage })));
 const FAQPage = lazy(() => import('./pages/FAQPage').then((m) => ({ default: m.FAQPage })));
 const BlogPage = lazy(() => import('./pages/BlogPage').then((m) => ({ default: m.BlogPage })));
+const CustomerAuthPage = lazy(() =>
+  import('./pages/CustomerAuthPage').then((m) => ({ default: m.CustomerAuthPage }))
+);
+const AccountPage = lazy(() => import('./pages/AccountPage').then((m) => ({ default: m.AccountPage })));
 const PrivacyPolicyPage = lazy(() =>
   import('./pages/policies/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
 );
@@ -60,6 +66,15 @@ const router = createBrowserRouter([
       { path: 'contact', element: withSuspense(<ContactPage />) },
       { path: 'faq', element: withSuspense(<FAQPage />) },
       { path: 'blog', element: withSuspense(<BlogPage />) },
+      { path: 'login', element: withSuspense(<CustomerAuthPage />) },
+      {
+        path: 'account',
+        element: withSuspense(
+          <ProtectedRoute>
+            <AccountPage />
+          </ProtectedRoute>
+        ),
+      },
       { path: 'privacy-policy', element: withSuspense(<PrivacyPolicyPage />) },
       { path: 'terms-conditions', element: withSuspense(<TermsConditionsPage />) },
       { path: 'shipping-policy', element: withSuspense(<ShippingPolicyPage />) },
@@ -71,5 +86,9 @@ const router = createBrowserRouter([
 ]);
 
 export function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
+  );
 }

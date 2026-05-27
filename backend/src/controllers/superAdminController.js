@@ -74,6 +74,104 @@ export const listUsers = asyncHandler(async (req, res) => {
   res.json(users);
 });
 
+export const getCustomerActivity = asyncHandler(async (req, res) => {
+  const [customers, quotes, contacts] = await Promise.all([
+    User.find({ role: 'user' }).select('name email phone company createdAt updatedAt').sort({ createdAt: -1 }).lean(),
+    Quote.find().select('fullName email phone metal quantity status requirement createdAt updatedAt customer').sort({ createdAt: -1 }).lean(),
+    Contact.find().select('fullName email phone subject message status createdAt updatedAt').sort({ createdAt: -1 }).lean(),
+  ]);
+
+  const rows = new Map();
+
+  const ensureRow = ({ email, name = '', phone = '', company = '', registered = false, createdAt = '' }) => {
+    const normalizedEmail = String(email || '').toLowerCase();
+    if (!normalizedEmail) return null;
+
+    if (!rows.has(normalizedEmail)) {
+      rows.set(normalizedEmail, {
+        id: normalizedEmail,
+        name,
+        email: normalizedEmail,
+        phone,
+        company,
+        registered,
+        joinedAt: createdAt,
+        quoteCount: 0,
+        contactCount: 0,
+        openQuotes: 0,
+        unreadContacts: 0,
+        lastActivityAt: createdAt,
+        lastActivityType: registered ? 'registered' : '',
+        lastActivityDetail: registered ? 'Customer account created' : '',
+      });
+    }
+
+    const row = rows.get(normalizedEmail);
+    row.name = row.name || name;
+    row.phone = row.phone || phone;
+    row.company = row.company || company;
+    row.registered = row.registered || registered;
+    row.joinedAt = row.joinedAt || createdAt;
+    return row;
+  };
+
+  const touch = (row, date, type, detail) => {
+    if (!row || !date) return;
+    const current = row.lastActivityAt ? new Date(row.lastActivityAt).getTime() : 0;
+    const next = new Date(date).getTime();
+    if (!current || next >= current) {
+      row.lastActivityAt = date;
+      row.lastActivityType = type;
+      row.lastActivityDetail = detail;
+    }
+  };
+
+  customers.forEach((customer) => {
+    ensureRow({
+      email: customer.email,
+      name: customer.name,
+      phone: customer.phone,
+      company: customer.company,
+      registered: true,
+      createdAt: customer.createdAt,
+    });
+  });
+
+  quotes.forEach((quote) => {
+    const row = ensureRow({
+      email: quote.email,
+      name: quote.fullName,
+      phone: quote.phone,
+      registered: false,
+      createdAt: quote.createdAt,
+    });
+    if (!row) return;
+    row.quoteCount += 1;
+    if (['new', 'in_review', 'quoted'].includes(quote.status)) row.openQuotes += 1;
+    touch(row, quote.createdAt, 'quote', `${quote.metal || 'Quote'} - ${quote.status}`);
+  });
+
+  contacts.forEach((contact) => {
+    const row = ensureRow({
+      email: contact.email,
+      name: contact.fullName,
+      phone: contact.phone,
+      registered: false,
+      createdAt: contact.createdAt,
+    });
+    if (!row) return;
+    row.contactCount += 1;
+    if (contact.status === 'unread') row.unreadContacts += 1;
+    touch(row, contact.createdAt, 'contact', contact.subject || contact.message || 'Contact message');
+  });
+
+  res.json(
+    Array.from(rows.values()).sort(
+      (a, b) => new Date(b.lastActivityAt || 0).getTime() - new Date(a.lastActivityAt || 0).getTime()
+    )
+  );
+});
+
 export const updateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
   if (!user) return res.status(404).json({ message: 'User not found' });
@@ -137,11 +235,19 @@ export const getAnalytics = asyncHandler(async (req, res) => {
     Contact.countDocuments(),
   ]);
 
-  const quoteByStatus = await Quote.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]);
+  const [quoteByStatus, contactByStatus, usersByRole, recentUsers] = await Promise.all([
+    Quote.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+    Contact.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+    User.aggregate([{ $group: { _id: '$role', count: { $sum: 1 } } }]),
+    User.find().select('name email role createdAt').sort({ createdAt: -1 }).limit(6),
+  ]);
 
   res.json({
     totals: { users, products, categories, blogs, quotes, contacts },
     quoteByStatus,
+    contactByStatus,
+    usersByRole,
+    recentUsers,
   });
 });
 

@@ -12,7 +12,7 @@ export function Layout() {
   const isHomeRoute = location.pathname === '/';
   const isAboutRoute = location.pathname === '/about';
   const isFullBleedRoute =
-    isHomeRoute || location.pathname === '/about' || location.pathname === '/contact' || location.pathname === '/auth';
+    isHomeRoute || location.pathname === '/about' || location.pathname === '/contact' || location.pathname === '/login';
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
