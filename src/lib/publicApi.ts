@@ -1,5 +1,6 @@
 import { axiosClient } from './axiosClient';
 import { unwrapResponse } from './apiUtils';
+import type { AuthUser } from './auth';
 
 export type ApiProduct = {
   _id: string;
@@ -62,14 +63,22 @@ export type QuotePayload = {
 };
 
 export type AuthPayload = { email: string; password: string };
-export type AuthUser = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  permissions?: string[];
-};
+export type RegisterPayload = AuthPayload & { name: string; phone?: string; company?: string };
 export type AuthResponse = { token: string; user: AuthUser };
+export type ApiQuote = {
+  _id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  metal: string;
+  quantity: string;
+  requirement?: string;
+  status: 'new' | 'in_review' | 'quoted' | 'closed';
+  adminNotes?: string;
+  fileUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 export const publicApi = {
   async getProducts() {
@@ -113,6 +122,21 @@ export const publicApi = {
     return unwrapResponse(res.data);
   },
 
+  async getMyQuotes() {
+    const res = await axiosClient.get<{ success: boolean; message: string; data: ApiQuote[] }>('/quotes/mine');
+    return res.data.data;
+  },
+
+  async loginCustomer(payload: AuthPayload) {
+    const res = await axiosClient.post<AuthResponse>('/auth/login/customer', payload);
+    return res.data;
+  },
+
+  async registerCustomer(payload: RegisterPayload) {
+    const res = await axiosClient.post<AuthResponse>('/auth/register/customer', payload);
+    return res.data;
+  },
+
   async loginAdmin(payload: AuthPayload) {
     const res = await axiosClient.post<AuthResponse>('/auth/login/admin', payload);
     return res.data;
@@ -126,5 +150,10 @@ export const publicApi = {
   async getMe() {
     const res = await axiosClient.get<{ user: AuthUser }>('/auth/me');
     return res.data.user;
+  },
+
+  async changePassword(payload: { currentPassword: string; newPassword: string }) {
+    const res = await axiosClient.post('/auth/change-password', payload);
+    return res.data;
   },
 };

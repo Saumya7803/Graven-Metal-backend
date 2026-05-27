@@ -12,11 +12,13 @@ import {
   ShieldCheck,
   TrendingUp,
   Truck,
+  UserRound,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BrandLogo } from '../components/BrandLogo';
 import { MotionReveal } from '../components/MotionReveal';
 import { SEO } from '../components/seo/SEO';
+import { useCustomerAuth } from '../components/auth/AuthProvider';
 
 const categories = [
   { name: 'Gold', image: '/imgs/gold.png', note: 'Certified bars and industrial-grade supply' },
@@ -81,6 +83,8 @@ const processSteps = [
 ];
 
 export function HomePage() {
+  const { isAuthenticated, user } = useCustomerAuth();
+
   return (
     <div className="bg-[#03070b]">
       <SEO
@@ -116,12 +120,21 @@ export function HomePage() {
                   ))}
                 </nav>
 
-                <Link
-                  to="/quote-request"
-                  className="inline-flex items-center gap-2 rounded bg-gold-cta px-4 py-2.5 text-xs font-bold text-black shadow-gold hover:brightness-110 sm:px-5"
-                >
-                  Request Quote <ArrowRight size={14} />
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link
+                    to={isAuthenticated ? '/account' : '/login'}
+                    className="hidden items-center gap-2 rounded border border-gold/25 bg-black/25 px-3 py-2 text-xs font-bold text-gold hover:border-gold/50 hover:text-champagne sm:inline-flex"
+                  >
+                    <UserRound size={14} />
+                    {isAuthenticated ? user?.name || 'Account' : 'Login'}
+                  </Link>
+                  <Link
+                    to="/quote-request"
+                    className="inline-flex items-center gap-2 rounded bg-gold-cta px-4 py-2.5 text-xs font-bold text-black shadow-gold hover:brightness-110 sm:px-5"
+                  >
+                    Request Quote <ArrowRight size={14} />
+                  </Link>
+                </div>
               </div>
 
               <div className="grid flex-1 items-center gap-8 py-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:py-12">

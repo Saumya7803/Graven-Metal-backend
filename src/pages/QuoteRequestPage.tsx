@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { MotionReveal } from '../components/MotionReveal';
 import { SEO } from '../components/seo/SEO';
 import { getApiErrorMessage } from '../lib/apiUtils';
 import { publicApi } from '../lib/publicApi';
 import { demoCategories } from '../data/demoContent';
+import { useCustomerAuth } from '../components/auth/AuthProvider';
 
 type QuoteForm = {
   name: string;
@@ -21,10 +22,11 @@ type QuoteErrors = Partial<Record<keyof QuoteForm, string>>;
 const metals = demoCategories.map((c) => c.name);
 
 export function QuoteRequestPage() {
+  const { user, isAuthenticated } = useCustomerAuth();
   const [form, setForm] = useState<QuoteForm>({
-    name: '',
-    email: '',
-    phone: '',
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
     quantity: '',
     requirement: '',
     metal: '',
@@ -34,6 +36,16 @@ export function QuoteRequestPage() {
   const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState('');
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    setForm((prev) => ({
+      ...prev,
+      name: prev.name || user.name || '',
+      email: prev.email || user.email || '',
+      phone: prev.phone || user.phone || '',
+    }));
+  }, [user]);
 
   const validate = () => {
     const next: QuoteErrors = {};
@@ -101,6 +113,7 @@ export function QuoteRequestPage() {
         <h1 className="mt-3 font-display text-3xl text-white sm:text-4xl">Request a Quote</h1>
         <p className="mt-2 max-w-2xl text-zinc-400">
           We provide custom offers based on your exact business requirements.
+          {isAuthenticated ? ' This request will be saved to your account.' : ''}
         </p>
 
         <form onSubmit={onSubmit} className="mt-6 grid gap-4 md:grid-cols-2">
