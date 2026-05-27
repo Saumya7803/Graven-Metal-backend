@@ -10,9 +10,23 @@ function formatAuthResponse(user) {
       id: user._id,
       name: user.name,
       email: user.email,
+      phone: user.phone || '',
+      company: user.company || '',
       role: user.role,
       permissions: user.permissions,
     },
+  };
+}
+
+function formatUser(user) {
+  return {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone || '',
+    company: user.company || '',
+    role: user.role,
+    permissions: user.permissions || [],
   };
 }
 
@@ -54,8 +68,36 @@ export const loginSuperAdmin = asyncHandler(async (req, res) => {
   res.json(result.data);
 });
 
+export const loginCustomer = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+  const result = await loginByRole(email, password, ['user']);
+  if (result.error) {
+    return res.status(401).json({ message: result.error });
+  }
+  res.json(result.data);
+});
+
+export const registerCustomer = asyncHandler(async (req, res) => {
+  const { name, email, password, phone = '', company = '' } = req.body;
+  const exists = await User.findOne({ email });
+  if (exists) {
+    return res.status(400).json({ message: 'Email already exists' });
+  }
+
+  const user = await User.create({
+    name,
+    email,
+    password,
+    phone,
+    company,
+    role: 'user',
+  });
+
+  res.status(201).json(formatAuthResponse(user));
+});
+
 export const me = asyncHandler(async (req, res) => {
-  res.json({ user: req.user });
+  res.json({ user: formatUser(req.user) });
 });
 
 export const changePassword = asyncHandler(async (req, res) => {

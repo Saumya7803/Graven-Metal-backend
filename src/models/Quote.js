@@ -29,6 +29,7 @@ const quoteSchema = new mongoose.Schema(
     quantity: { type: String, required: true, trim: true },
     metal: { type: String, required: true, trim: true },
     requirement: { type: String, required: true },
+    customer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     file: { type: quoteFileSchema, default: () => ({}) },
     status: { type: String, enum: ['new', 'in_review', 'quoted', 'closed'], default: 'new' },
     adminNotes: { type: String, default: '' },
