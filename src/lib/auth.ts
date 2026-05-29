@@ -62,6 +62,9 @@ export function isTokenExpired(token: string) {
 
 export function getDefaultRouteForRole(role?: string) {
   if (role === 'super_admin') return '/super-admin';
+  if (role === 'lqt') return '/lqt';
+  if (role === 'sales') return '/sales';
+  if (role === 'procurement') return '/procurement';
   if (role === 'admin' || role === 'editor') return '/admin';
   return '/';
 }
