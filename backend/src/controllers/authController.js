@@ -57,7 +57,14 @@ async function loginByRole(email, password, allowedRoles) {
 
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const result = await loginByRole(email, password, ['super_admin', 'admin', 'editor']);
+  const result = await loginByRole(email, password, [
+    'super_admin',
+    'lqt',
+    'sales',
+    'procurement',
+    'admin',
+    'editor',
+  ]);
   if (result.error) {
     return res.status(401).json({ message: result.error });
   }
@@ -66,7 +73,7 @@ export const login = asyncHandler(async (req, res) => {
 
 export const loginAdmin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const result = await loginByRole(email, password, ['admin', 'editor']);
+  const result = await loginByRole(email, password, ['lqt', 'sales', 'procurement', 'admin', 'editor']);
   if (result.error) {
     return res.status(401).json({ message: result.error });
   }

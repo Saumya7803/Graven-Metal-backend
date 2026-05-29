@@ -8,6 +8,9 @@ const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default:
 const SuperAdminPage = lazy(() =>
   import('./pages/SuperAdminPage').then((m) => ({ default: m.SuperAdminPage }))
 );
+const OperationsDashboardPage = lazy(() =>
+  import('./pages/OperationsDashboardPage').then((m) => ({ default: m.OperationsDashboardPage }))
+);
 const AuthPage = lazy(() => import('./pages/auth/AuthPage').then((m) => ({ default: m.AuthPage })));
 const NotFoundPage = lazy(() =>
   import('./pages/system/NotFoundPage').then((m) => ({ default: m.NotFoundPage }))
@@ -46,6 +49,30 @@ const router = createBrowserRouter([
     element: withSuspense(
       <ProtectedRoute allowedRoles={['admin', 'editor', 'super_admin']}>
         <AdminPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/lqt',
+    element: withSuspense(
+      <ProtectedRoute allowedRoles={['lqt', 'super_admin']}>
+        <OperationsDashboardPage kind="lqt" />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/sales',
+    element: withSuspense(
+      <ProtectedRoute allowedRoles={['sales', 'super_admin']}>
+        <OperationsDashboardPage kind="sales" />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/procurement',
+    element: withSuspense(
+      <ProtectedRoute allowedRoles={['procurement', 'super_admin']}>
+        <OperationsDashboardPage kind="procurement" />
       </ProtectedRoute>
     ),
   },

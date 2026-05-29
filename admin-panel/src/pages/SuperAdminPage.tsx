@@ -40,6 +40,19 @@ import { LoadingOverlay } from '../components/ui/LoadingOverlay';
 import { SEO } from '../components/seo/SEO';
 
 const allPermissions = [
+  'manage_leads',
+  'qualify_leads',
+  'assign_leads',
+  'manage_customers',
+  'manage_rfqs',
+  'manage_quotations',
+  'manage_negotiations',
+  'manage_orders',
+  'manage_suppliers',
+  'manage_price_requests',
+  'compare_vendors',
+  'manage_purchase_orders',
+  'view_platform_monitoring',
   'manage_products',
   'manage_categories',
   'manage_blogs',
@@ -54,14 +67,14 @@ const allPermissions = [
 ];
 
 const tabs = [
-  { key: 'analytics', label: 'Command Center', icon: BarChart3 },
-  { key: 'admins', label: 'Admins', icon: ShieldCheck },
-  { key: 'users', label: 'Users', icon: Users },
+  { key: 'analytics', label: 'Dashboard Overview', icon: BarChart3 },
+  { key: 'admins', label: 'Role & Permissions', icon: ShieldCheck },
+  { key: 'users', label: 'User Management', icon: Users },
   { key: 'customers', label: 'Customers', icon: UserCog },
   { key: 'audit', label: 'Audit Logs', icon: History },
-  { key: 'settings', label: 'Settings', icon: SettingsIcon },
+  { key: 'settings', label: 'System Settings', icon: SettingsIcon },
   { key: 'seo', label: 'SEO', icon: Globe2 },
-  { key: 'backup', label: 'Backup', icon: Database },
+  { key: 'backup', label: 'Platform Monitoring', icon: Database },
 ] as const;
 
 type Tab = (typeof tabs)[number]['key'];
@@ -268,6 +281,9 @@ function formatDateTime(date?: string) {
 
 function getRoleTone(role: string) {
   if (role === 'super_admin') return 'border-gold/35 bg-gold/10 text-gold';
+  if (role === 'lqt') return 'border-cyan-400/30 bg-cyan-400/10 text-cyan-200';
+  if (role === 'sales') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
+  if (role === 'procurement') return 'border-violet-400/30 bg-violet-400/10 text-violet-200';
   if (role === 'admin') return 'border-sky-400/30 bg-sky-400/10 text-sky-200';
   if (role === 'editor') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
   return 'border-zinc-600/60 bg-zinc-800/70 text-zinc-300';
@@ -312,7 +328,7 @@ export function SuperAdminPage() {
     name: '',
     email: '',
     password: '',
-    role: 'admin',
+    role: 'lqt',
     permissions: [] as string[],
   });
 
@@ -415,6 +431,33 @@ export function SuperAdminPage() {
     [customerActivity]
   );
 
+  const teamManagementCards = [
+    {
+      label: 'LQT Team Management',
+      role: 'lqt',
+      count: admins.filter((row) => row.role === 'lqt').length,
+      helper: 'Lead qualification ownership',
+      route: '/lqt',
+      icon: ClipboardList,
+    },
+    {
+      label: 'Sales Team Management',
+      role: 'sales',
+      count: admins.filter((row) => row.role === 'sales').length,
+      helper: 'Commercial pipeline ownership',
+      route: '/sales',
+      icon: UserCog,
+    },
+    {
+      label: 'Procurement Team Management',
+      role: 'procurement',
+      count: admins.filter((row) => row.role === 'procurement').length,
+      helper: 'Supplier and sourcing ownership',
+      route: '/procurement',
+      icon: Package,
+    },
+  ];
+
   const quickStats = [
     {
       label: 'Total Users',
@@ -467,7 +510,7 @@ export function SuperAdminPage() {
       target: 'seo' as Tab,
     },
     {
-      text: totalAdmins > 0 ? 'Admin coverage available' : 'Create one admin account',
+      text: totalAdmins > 0 ? 'Team coverage available' : 'Create one team account',
       done: totalAdmins > 0,
       target: 'admins' as Tab,
     },
@@ -505,7 +548,7 @@ export function SuperAdminPage() {
   };
 
   const deleteAdmin = async (admin: UserRow) => {
-    if (!window.confirm(`Delete admin "${admin.name}"? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete team member "${admin.name}"? This cannot be undone.`)) return;
     try {
       await superAdminApi.deleteAdmin(admin._id);
       toast.success('Admin deleted');
@@ -674,7 +717,7 @@ export function SuperAdminPage() {
                   className="inline-flex items-center gap-2 rounded-xl bg-gold-cta px-4 py-2 text-sm font-extrabold text-black shadow-gold hover:brightness-110"
                 >
                   <UserPlus size={16} />
-                  Create Admin
+                  Create Team Account
                 </button>
               </div>
             </div>
@@ -715,6 +758,29 @@ export function SuperAdminPage() {
                       <p className="relative text-xs uppercase tracking-[0.16em] text-zinc-400">{name}</p>
                       <p className="relative mt-2 text-3xl font-bold text-gold">{value}</p>
                     </div>
+                  ))}
+                </div>
+
+                <div className="mt-5 grid gap-3 lg:grid-cols-3">
+                  {teamManagementCards.map(({ label: teamLabel, role, count, helper, route, icon: Icon }) => (
+                    <button
+                      key={role}
+                      type="button"
+                      onClick={() => navigate(route)}
+                      className="group flex min-h-[120px] items-start gap-3 rounded-2xl border border-gold/15 bg-[#070c12] p-4 text-left hover:border-gold/40 hover:bg-[#0d1218]"
+                    >
+                      <span className={`rounded-xl border p-2 ${getRoleTone(role)}`}>
+                        <Icon size={18} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-semibold text-white">{teamLabel}</span>
+                        <span className="mt-1 block text-sm text-zinc-400">{helper}</span>
+                        <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gold">
+                          {count} members
+                          <ArrowRight size={13} className="transition group-hover:translate-x-0.5" />
+                        </span>
+                      </span>
+                    </button>
                   ))}
                 </div>
 
@@ -904,7 +970,7 @@ export function SuperAdminPage() {
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <p className={label}>Access Control</p>
-                  <h3 className="mt-1 font-display text-3xl text-white">Admins & Permissions</h3>
+                  <h3 className="mt-1 font-display text-3xl text-white">Role & Permission Management</h3>
                 </div>
                 <div className="relative w-full lg:max-w-sm">
                   <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
@@ -912,7 +978,7 @@ export function SuperAdminPage() {
                     className={`${input} pl-10`}
                     value={adminSearch}
                     onChange={(e) => setAdminSearch(e.target.value)}
-                    placeholder="Search admins or permissions"
+                    placeholder="Search team members or permissions"
                   />
                 </div>
               </div>
@@ -921,7 +987,7 @@ export function SuperAdminPage() {
                 <table className="w-full min-w-[980px] text-sm">
                   <thead className="border-b border-gold/10">
                     <tr className={tableHead}>
-                      <th className="px-4 py-3">Admin</th>
+                      <th className="px-4 py-3">Team Member</th>
                       <th className="px-4 py-3">Role</th>
                       <th className="px-4 py-3">Permissions</th>
                       <th className="px-4 py-3">Actions</th>
@@ -958,6 +1024,9 @@ export function SuperAdminPage() {
                               )
                             }
                           >
+                            <option value="lqt">lqt</option>
+                            <option value="sales">sales</option>
+                            <option value="procurement">procurement</option>
                             <option value="admin">admin</option>
                             <option value="editor">editor</option>
                           </select>
@@ -1061,7 +1130,7 @@ export function SuperAdminPage() {
                 </table>
                 {!filteredAdmins.length ? (
                   <div className="p-5">
-                    <EmptyState title="No admins found" message="Try a different search or create a new admin account." />
+                    <EmptyState title="No team members found" message="Try a different search or create a new team account." />
                   </div>
                 ) : null}
               </div>
@@ -1157,6 +1226,9 @@ export function SuperAdminPage() {
                   <select className={input} value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
                     <option value="all">All roles</option>
                     <option value="super_admin">super_admin</option>
+                    <option value="lqt">lqt</option>
+                    <option value="sales">sales</option>
+                    <option value="procurement">procurement</option>
                     <option value="admin">admin</option>
                     <option value="editor">editor</option>
                     <option value="user">user</option>
@@ -1201,6 +1273,9 @@ export function SuperAdminPage() {
                                 }
                               >
                                 <option value="user">user</option>
+                                <option value="lqt">lqt</option>
+                                <option value="sales">sales</option>
+                                <option value="procurement">procurement</option>
                                 <option value="editor">editor</option>
                                 <option value="admin">admin</option>
                               </select>
@@ -1626,13 +1701,13 @@ export function SuperAdminPage() {
       </div>
 
       {createAdminOpen ? (
-        <ModalShell title="Create Admin Account" eyebrow="Access Provisioning" onClose={() => setCreateAdminOpen(false)}>
+        <ModalShell title="Create Team Account" eyebrow="Access Provisioning" onClose={() => setCreateAdminOpen(false)}>
           <div className="grid gap-3 md:grid-cols-2">
             <label>
               <span className={label}>Name</span>
               <input
                 className="mt-2 w-full rounded-xl border border-gold/20 bg-[#0d1218] px-3.5 py-2.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-500 focus:border-gold/60"
-                placeholder="Admin name"
+                placeholder="Team member name"
                 value={newAdmin.name}
                 onChange={(e) => setNewAdmin((prev) => ({ ...prev, name: e.target.value }))}
               />
@@ -1641,7 +1716,7 @@ export function SuperAdminPage() {
               <span className={label}>Email</span>
               <input
                 className="mt-2 w-full rounded-xl border border-gold/20 bg-[#0d1218] px-3.5 py-2.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-500 focus:border-gold/60"
-                placeholder="admin@example.com"
+                placeholder="member@example.com"
                 value={newAdmin.email}
                 onChange={(e) => setNewAdmin((prev) => ({ ...prev, email: e.target.value }))}
               />
@@ -1666,6 +1741,9 @@ export function SuperAdminPage() {
                 value={newAdmin.role}
                 onChange={(e) => setNewAdmin((prev) => ({ ...prev, role: e.target.value }))}
               >
+                <option value="lqt">lqt</option>
+                <option value="sales">sales</option>
+                <option value="procurement">procurement</option>
                 <option value="admin">admin</option>
                 <option value="editor">editor</option>
               </select>
@@ -1721,8 +1799,8 @@ export function SuperAdminPage() {
               setSaving(true);
               try {
                 await superAdminApi.createAdmin(newAdmin);
-                toast.success('Admin created');
-                setNewAdmin({ name: '', email: '', password: '', role: 'admin', permissions: [] });
+                toast.success('Team account created');
+                setNewAdmin({ name: '', email: '', password: '', role: 'lqt', permissions: [] });
                 setCreateAdminOpen(false);
                 await load();
               } catch (e) {
@@ -1733,7 +1811,7 @@ export function SuperAdminPage() {
             }}
           >
             <Plus size={16} />
-            {saving ? 'Creating...' : 'Create Admin'}
+            {saving ? 'Creating...' : 'Create Account'}
           </button>
         </ModalShell>
       ) : null}

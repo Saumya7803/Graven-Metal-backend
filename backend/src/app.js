@@ -18,6 +18,20 @@ export const createApp = () => {
     .filter(Boolean);
   const devOrigins = ['http://localhost:5173', 'http://localhost:5174'];
   const allowList = Array.from(new Set(isProduction ? configuredOrigins : [...configuredOrigins, ...devOrigins]));
+  const isLocalDevOrigin = (origin) => {
+    try {
+      const { hostname, port, protocol } = new URL(origin);
+      return (
+        !isProduction &&
+        protocol === 'http:' &&
+        ['localhost', '127.0.0.1', '::1'].includes(hostname) &&
+        Number(port) >= 5173 &&
+        Number(port) <= 5199
+      );
+    } catch {
+      return false;
+    }
+  };
 
   const corsOptions = {
     origin(origin, callback) {
@@ -26,6 +40,7 @@ export const createApp = () => {
       // In development/tests allow local tools without strict origin matching.
       if (!isProduction && allowList.length === 0) return callback(null, true);
       if (allowList.includes(normalizeOrigin(origin))) return callback(null, true);
+      if (isLocalDevOrigin(origin)) return callback(null, true);
 
       return callback(new Error('Not allowed by CORS'));
     },

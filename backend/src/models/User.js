@@ -20,7 +20,11 @@ const userSchema = new mongoose.Schema(
         message: 'Password must contain uppercase, lowercase, and a number',
       },
     },
-    role: { type: String, enum: ['super_admin', 'admin', 'editor', 'user'], default: 'user' },
+    role: {
+      type: String,
+      enum: ['super_admin', 'lqt', 'sales', 'procurement', 'admin', 'editor', 'user'],
+      default: 'user',
+    },
     permissions: [{ type: String }],
     lastLoginAt: { type: Date },
     lastActiveAt: { type: Date },
