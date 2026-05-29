@@ -9,12 +9,15 @@ import { Contact } from '../models/Contact.js';
 import { Blog } from '../models/Blog.js';
 import { SiteSettings } from '../models/SiteSettings.js';
 import { AuditLog } from '../models/AuditLog.js';
+import { OperationRecord } from '../models/OperationRecord.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ROLE_DEFAULT_PERMISSIONS } from '../constants/permissions.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const BACKUP_DIR = path.resolve(__dirname, '../../backups');
+const STAFF_ROLES = ['lqt', 'sales', 'procurement', 'admin', 'editor'];
+const MANAGED_ROLES = [...STAFF_ROLES, 'user'];
 
 async function recordAudit(req, action, target = {}, metadata = {}) {
   await AuditLog.create({
@@ -32,8 +35,8 @@ async function recordAudit(req, action, target = {}, metadata = {}) {
 
 export const createAdmin = asyncHandler(async (req, res) => {
   const { name, email, password, role = 'admin', permissions } = req.body;
-  if (!['admin', 'editor'].includes(role)) {
-    return res.status(400).json({ message: 'Role must be admin or editor' });
+  if (!STAFF_ROLES.includes(role)) {
+    return res.status(400).json({ message: 'Role must be LQT, sales, procurement, admin, or editor' });
   }
 
   const exists = await User.findOne({ email });
@@ -67,7 +70,7 @@ export const deleteAdmin = asyncHandler(async (req, res) => {
   const admin = await User.findById(req.params.id);
   if (!admin) return res.status(404).json({ message: 'Admin not found' });
   if (admin.role === 'super_admin') return res.status(400).json({ message: 'Cannot delete super admin' });
-  if (!['admin', 'editor'].includes(admin.role)) return res.status(400).json({ message: 'Target user is not admin/editor' });
+  if (!STAFF_ROLES.includes(admin.role)) return res.status(400).json({ message: 'Target user is not a managed team member' });
 
   await admin.deleteOne();
   await recordAudit(req, 'admin.deleted', { type: 'user', id: admin._id.toString(), label: admin.email }, { role: admin.role });
@@ -80,7 +83,7 @@ export const assignPermissions = asyncHandler(async (req, res) => {
   if (!user) return res.status(404).json({ message: 'User not found' });
   if (user.role === 'super_admin') return res.status(400).json({ message: 'Super admin permissions are fixed' });
 
-  if (role && ['admin', 'editor', 'user'].includes(role)) user.role = role;
+  if (role && MANAGED_ROLES.includes(role)) user.role = role;
   user.permissions = permissions;
   await user.save();
 
@@ -95,7 +98,7 @@ export const assignPermissions = asyncHandler(async (req, res) => {
 });
 
 export const listAdmins = asyncHandler(async (req, res) => {
-  const admins = await User.find({ role: { $in: ['admin', 'editor'] } }).select('-password -sessionVersion').sort({ createdAt: -1 });
+  const admins = await User.find({ role: { $in: STAFF_ROLES } }).select('-password -sessionVersion').sort({ createdAt: -1 });
   res.json(admins);
 });
 
@@ -211,7 +214,7 @@ export const updateUser = asyncHandler(async (req, res) => {
 
   const { name, role, permissions } = req.body;
   if (name) user.name = name;
-  if (role && ['admin', 'editor', 'user'].includes(role)) user.role = role;
+  if (role && MANAGED_ROLES.includes(role)) user.role = role;
   if (permissions) user.permissions = permissions;
 
   await user.save();
@@ -291,7 +294,7 @@ export const getAnalytics = asyncHandler(async (req, res) => {
 });
 
 export const backupDatabase = asyncHandler(async (req, res) => {
-  const [users, products, categories, blogs, quotes, contacts, settings] = await Promise.all([
+  const [users, products, categories, blogs, quotes, contacts, settings, operationRecords] = await Promise.all([
     User.find().select('-password'),
     Product.find(),
     Category.find(),
@@ -299,11 +302,12 @@ export const backupDatabase = asyncHandler(async (req, res) => {
     Quote.find(),
     Contact.find(),
     SiteSettings.find(),
+    OperationRecord.find(),
   ]);
 
   const snapshot = {
     generatedAt: new Date().toISOString(),
-    collections: { users, products, categories, blogs, quotes, contacts, settings },
+    collections: { users, products, categories, blogs, quotes, contacts, settings, operationRecords },
   };
 
   await fs.mkdir(BACKUP_DIR, { recursive: true });

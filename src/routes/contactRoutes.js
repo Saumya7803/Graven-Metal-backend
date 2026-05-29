@@ -31,7 +31,7 @@ router.get(
   '/',
   adminRateLimit,
   protect,
-  authorize('super_admin', 'admin', 'editor'),
+  authorize('super_admin', 'lqt', 'sales', 'admin', 'editor'),
   authorizePermission(PERMISSIONS.MANAGE_CONTACTS),
   getContacts
 );
@@ -39,7 +39,7 @@ router.get(
   '/:id',
   adminRateLimit,
   protect,
-  authorize('super_admin', 'admin', 'editor'),
+  authorize('super_admin', 'lqt', 'sales', 'admin', 'editor'),
   authorizePermission(PERMISSIONS.MANAGE_CONTACTS),
   getContactById
 );
@@ -47,7 +47,7 @@ router.put(
   '/:id',
   adminRateLimit,
   protect,
-  authorize('super_admin', 'admin', 'editor'),
+  authorize('super_admin', 'lqt', 'sales', 'admin', 'editor'),
   authorizePermission(PERMISSIONS.MANAGE_CONTACTS),
   [
     body('status').optional().isIn(['unread', 'read', 'replied', 'archived']),

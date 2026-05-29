@@ -6,6 +6,9 @@ const DEV_SUPER_ADMIN_EMAIL = process.env.DEV_SUPER_ADMIN_EMAIL || 'super@graven
 const DEV_SUPER_ADMIN_PASSWORD = process.env.DEV_SUPER_ADMIN_PASSWORD || 'Password123';
 const DEV_ADMIN_EMAIL = process.env.DEV_ADMIN_EMAIL || 'admin@graven.local';
 const DEV_ADMIN_PASSWORD = process.env.DEV_ADMIN_PASSWORD || 'Password123';
+const DEV_LQT_EMAIL = process.env.DEV_LQT_EMAIL || 'lqt@graven.local';
+const DEV_SALES_EMAIL = process.env.DEV_SALES_EMAIL || 'sales@graven.local';
+const DEV_PROCUREMENT_EMAIL = process.env.DEV_PROCUREMENT_EMAIL || 'procurement@graven.local';
 
 const demoCategories = [
   { name: 'Gold', slug: 'gold', description: 'Certified bars and industrial-grade supply.', sortOrder: 10 },
@@ -154,6 +157,23 @@ export const ensureDevUsers = async () => {
       role: 'admin',
     });
     console.log(`Created local admin: ${DEV_ADMIN_EMAIL}`);
+  }
+
+  const teamAccounts = [
+    { name: 'Local LQT Lead', email: DEV_LQT_EMAIL, role: 'lqt' },
+    { name: 'Local Sales Lead', email: DEV_SALES_EMAIL, role: 'sales' },
+    { name: 'Local Procurement Lead', email: DEV_PROCUREMENT_EMAIL, role: 'procurement' },
+  ];
+
+  for (const account of teamAccounts) {
+    const exists = await User.findOne({ email: account.email });
+    if (!exists) {
+      await User.create({
+        ...account,
+        password: DEV_ADMIN_PASSWORD,
+      });
+      console.log(`Created local ${account.role} account: ${account.email}`);
+    }
   }
 
   await ensureDevCatalog();

@@ -7,6 +7,7 @@ import contactRoutes from './contactRoutes.js';
 import blogRoutes from './blogRoutes.js';
 import superAdminRoutes from './superAdminRoutes.js';
 import settingsRoutes from './settingsRoutes.js';
+import operationsRoutes from './operationsRoutes.js';
 import {
   adminRateLimit,
   apiRateLimit,
@@ -23,6 +24,7 @@ router.use('/quotes', quoteRoutes);
 router.use('/contacts', contactRoutes);
 router.use('/settings', adminRateLimit, settingsRoutes);
 router.use('/super-admin', adminRateLimit, superAdminRoutes);
+router.use('/operations', adminRateLimit, operationsRoutes);
 router.use(apiRateLimit);
 
 export default router;

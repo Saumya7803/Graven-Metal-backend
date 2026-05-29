@@ -40,6 +40,32 @@ const run = async () => {
       password: 'Password123',
       role: 'admin',
     });
+    await User.create({
+      name: 'LQT User',
+      email: 'lqt@graven.test',
+      password: 'Password123',
+      role: 'lqt',
+    });
+    await User.create({
+      name: 'Sales User',
+      email: 'sales@graven.test',
+      password: 'Password123',
+      role: 'sales',
+    });
+    await User.create({
+      name: 'Procurement User',
+      email: 'procurement@graven.test',
+      password: 'Password123',
+      role: 'procurement',
+    });
+    await User.create({
+      name: 'Customer User',
+      email: 'customer@graven.test',
+      password: 'Password123',
+      phone: '+1234567899',
+      company: 'Customer Co',
+      role: 'user',
+    });
 
     const superLogin = await request(app)
       .post('/api/auth/login/super-admin')
@@ -54,6 +80,34 @@ const run = async () => {
     assertStatus(adminLogin, 200, 'admin login');
     const adminToken = adminLogin.body?.token;
     assertTruthy(adminToken, 'admin token');
+
+    const lqtLogin = await request(app)
+      .post('/api/auth/login/admin')
+      .send({ email: 'lqt@graven.test', password: 'Password123' });
+    assertStatus(lqtLogin, 200, 'lqt login');
+    const lqtToken = lqtLogin.body?.token;
+    assertTruthy(lqtToken, 'lqt token');
+
+    const salesLogin = await request(app)
+      .post('/api/auth/login/admin')
+      .send({ email: 'sales@graven.test', password: 'Password123' });
+    assertStatus(salesLogin, 200, 'sales login');
+    const salesToken = salesLogin.body?.token;
+    assertTruthy(salesToken, 'sales token');
+
+    const procurementLogin = await request(app)
+      .post('/api/auth/login/admin')
+      .send({ email: 'procurement@graven.test', password: 'Password123' });
+    assertStatus(procurementLogin, 200, 'procurement login');
+    const procurementToken = procurementLogin.body?.token;
+    assertTruthy(procurementToken, 'procurement token');
+
+    const customerLogin = await request(app)
+      .post('/api/auth/login/customer')
+      .send({ email: 'customer@graven.test', password: 'Password123' });
+    assertStatus(customerLogin, 200, 'customer login');
+    const customerToken = customerLogin.body?.token;
+    assertTruthy(customerToken, 'customer token');
 
     const categoryCreate = await request(app)
       .post('/api/categories')
@@ -103,8 +157,9 @@ const run = async () => {
 
     const quoteCreate = await request(app)
       .post('/api/quotes')
+      .set('Authorization', `Bearer ${customerToken}`)
       .field('fullName', 'Client A')
-      .field('email', 'clienta@test.com')
+      .field('email', 'customer@graven.test')
       .field('phone', '+1234567890')
       .field('metal', 'Gold')
       .field('quantity', '10 Kg')
@@ -112,6 +167,79 @@ const run = async () => {
     assertStatus(quoteCreate, 201, 'quote create');
     const quoteId = quoteCreate.body?.data?._id;
     assertTruthy(quoteId, 'quote id');
+
+    const lqtDashboard = await request(app)
+      .get('/api/operations/lqt/dashboard')
+      .set('Authorization', `Bearer ${lqtToken}`);
+    assertStatus(lqtDashboard, 200, 'lqt dashboard api');
+    assertTruthy(lqtDashboard.body?.rows?.some((row) => `${row.id}` === `${quoteId}`), 'lqt dashboard contains quote');
+
+    const lqtUpdate = await request(app)
+      .patch(`/api/operations/lqt/quotes/${quoteId}`)
+      .set('Authorization', `Bearer ${lqtToken}`)
+      .send({
+        module: 'qualification',
+        status: 'in_review',
+        leadTemperature: 'hot',
+        assignedToName: 'LQT User',
+        note: 'Qualified by LQT smoke test',
+        followUp: { note: 'Call procurement head', dueAt: new Date().toISOString() },
+        meeting: { note: 'Discovery meeting', scheduledAt: new Date().toISOString() },
+      });
+    assertStatus(lqtUpdate, 200, 'lqt quote operation update');
+
+    const salesUpdate = await request(app)
+      .patch(`/api/operations/sales/quotes/${quoteId}`)
+      .set('Authorization', `Bearer ${salesToken}`)
+      .send({
+        module: 'quotation-management',
+        assignedTeam: 'sales',
+        assignedToName: 'Sales User',
+        quotation: { amount: 750000, currency: 'INR', status: 'sent' },
+        note: 'Quotation sent by sales smoke test',
+      });
+    assertStatus(salesUpdate, 200, 'sales quote operation update');
+
+    const customerQuotesAfterOps = await request(app)
+      .get('/api/quotes/mine')
+      .set('Authorization', `Bearer ${customerToken}`);
+    assertStatus(customerQuotesAfterOps, 200, 'customer quote history after operations');
+    const customerQuote = customerQuotesAfterOps.body?.data?.find((row) => `${row._id || row.id}` === `${quoteId}`);
+    if (!customerQuote || customerQuote.status !== 'quoted') {
+      throw new Error(
+        `customer website/flutter quote status reflects sales update failed. Quote: ${JSON.stringify(customerQuote)}`
+      );
+    }
+
+    const procurementRecord = await request(app)
+      .post('/api/operations/procurement/records')
+      .set('Authorization', `Bearer ${procurementToken}`)
+      .send({
+        module: 'price-requests',
+        title: 'Shakti Metals',
+        detail: 'Copper cathode price request',
+        status: 'Requested',
+        nextStep: 'Await supplier quote',
+        value: '12 MT',
+      });
+    assertStatus(procurementRecord, 201, 'procurement record create');
+    const procurementRecordId = procurementRecord.body?.data?.id;
+    assertTruthy(procurementRecordId, 'procurement record id');
+
+    const procurementRecordUpdate = await request(app)
+      .patch(`/api/operations/procurement/records/${procurementRecordId}`)
+      .set('Authorization', `Bearer ${procurementToken}`)
+      .send({ status: 'Quoted', value: '-2.4%', note: 'Vendor quote received' });
+    assertStatus(procurementRecordUpdate, 200, 'procurement record update');
+
+    const procurementDashboard = await request(app)
+      .get('/api/operations/procurement/dashboard')
+      .set('Authorization', `Bearer ${procurementToken}`);
+    assertStatus(procurementDashboard, 200, 'procurement dashboard api');
+    assertTruthy(
+      procurementDashboard.body?.rows?.some((row) => `${row.id}` === `${procurementRecordId}` && row.status === 'Quoted'),
+      'procurement dashboard reflects record update'
+    );
 
     const contactCreate = await request(app)
       .post('/api/contacts')
