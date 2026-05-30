@@ -11,9 +11,6 @@ import { publicApi } from '../lib/publicApi';
 
 type Mode = 'login' | 'register';
 
-const DEV_CUSTOMER_EMAIL = import.meta.env.DEV ? 'customer@graven.local' : '';
-const DEV_CUSTOMER_PASSWORD = import.meta.env.DEV ? 'Password123' : '';
-
 function IconField({
   icon: Icon,
   label,
@@ -120,12 +117,13 @@ export function CustomerAuthPage() {
               {mode === 'register' ? 'Create Account' : 'Customer Login'}
             </h2>
             <p className="mt-2 text-sm leading-6 text-zinc-400">
-              {mode === 'register' ? 'Create a customer account for quote tracking.' : 'Enter your credentials to open your account.'}
+              {mode === 'register'
+                ? 'Create a customer account to save your details and request quotes faster.'
+                : 'Enter your email and password to open your account.'}
             </p>
-            {mode === 'login' && DEV_CUSTOMER_EMAIL ? (
+            {mode === 'register' ? (
               <p className="mt-3 rounded-xl border border-gold/15 bg-black/20 px-3.5 py-2.5 text-xs leading-5 text-zinc-400">
-                Demo login: <span className="text-zinc-200">{DEV_CUSTOMER_EMAIL}</span> /{' '}
-                <span className="text-zinc-200">{DEV_CUSTOMER_PASSWORD}</span>
+                New here? Register with your own email and password. Returning customers can log in with the same details.
               </p>
             ) : null}
 
