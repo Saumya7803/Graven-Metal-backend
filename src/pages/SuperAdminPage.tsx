@@ -741,6 +741,21 @@ export function SuperAdminPage() {
                 <p className="mt-2 max-w-2xl text-base leading-7 text-zinc-300">
                   Monitor access, configure the storefront, tune SEO, and keep recoveries one click away.
                 </p>
+                <div className="mt-4 max-w-2xl rounded-2xl border border-gold/20 bg-[#0d1218]/90 p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-gold/70">Team first</p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-300">
+                    Start by adding your LQT, Sales, Procurement, Admin, and Editor accounts. Once the team is in
+                    place, the rest of the business workflow can run smoothly.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setCreateAdminOpen(true)}
+                    className="mt-3 inline-flex items-center gap-2 rounded-xl bg-gold-cta px-4 py-2 text-sm font-extrabold text-black shadow-gold hover:brightness-110"
+                  >
+                    <UserPlus size={16} />
+                    Add Team Member
+                  </button>
+                </div>
               </div>
 
               <div className="flex flex-wrap gap-2">
