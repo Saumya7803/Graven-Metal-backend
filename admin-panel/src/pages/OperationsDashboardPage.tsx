@@ -1003,7 +1003,19 @@ function ScheduleWorkspace({ filteredRows, selectedModule, actionBusy, onRowActi
   );
 }
 
-function ProcessWorkspace({ config, filteredRows, selectedModule, queueMode, setQueueMode, actionBusy, onRowAction, onOpenForm }: WorkspaceProps) {
+function ProcessWorkspace({
+  kind,
+  config,
+  filteredRows,
+  selectedModule,
+  queueMode,
+  setQueueMode,
+  actionBusy,
+  onRowAction,
+  onOpenForm,
+  onOpenNewForm,
+}: WorkspaceProps) {
+  const formButtonLabel = kind === 'sales' ? 'Open quotation form' : kind === 'procurement' ? 'Open price form' : 'Open form';
   return (
     <Panel>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -1011,11 +1023,36 @@ function ProcessWorkspace({ config, filteredRows, selectedModule, queueMode, set
           <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Process Control</p>
           <h3 className="mt-1 font-display text-2xl text-white">{selectedModule.label}</h3>
         </div>
-        <QueueModeControl queueMode={queueMode} setQueueMode={setQueueMode} />
+        <div className="flex flex-wrap items-center gap-3">
+          <QueueModeControl queueMode={queueMode} setQueueMode={setQueueMode} />
+          {kind === 'sales' || kind === 'procurement' ? (
+            <button
+              type="button"
+              onClick={onOpenNewForm}
+              disabled={actionBusy}
+              className={`inline-flex items-center gap-2 rounded-xl ${roleClass.cta} px-4 py-2 text-sm font-extrabold text-black shadow-glow disabled:opacity-60`}
+            >
+              {formButtonLabel}
+              <ArrowRight size={15} />
+            </button>
+          ) : null}
+        </div>
       </div>
       <div className="mt-5">
         <WorkTable config={config} rows={filteredRows} onOpenForm={onOpenForm} />
       </div>
+      {kind === 'sales' || kind === 'procurement' ? (
+        <div className={`mt-5 rounded-2xl border ${roleClass.borderSoft} ${roleClass.inner} p-4`}>
+          <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">
+            {kind === 'sales' ? 'Sales quotation form' : 'Procurement price form'}
+          </p>
+          <p className="mt-2 text-sm text-zinc-300">
+            {kind === 'sales'
+              ? 'Capture customer discussion, quotation value, follow-up, and next action in one place.'
+              : 'Capture supplier price, comparison notes, and the next procurement step in one place.'}
+          </p>
+        </div>
+      ) : null}
       <div className="mt-5 grid gap-3 md:grid-cols-3">
         {['Prepare document', 'Internal approval', 'Customer/vendor update'].map((step, index) => (
           <div key={step} className={`rounded-2xl border ${roleClass.borderSoft} ${roleClass.card} p-4`}>
@@ -1090,6 +1127,7 @@ type OperationsFormModalProps = {
 function OperationsFormModal({ kind, row, members, salesMembers, activeModule, busy, onClose, onSave }: OperationsFormModalProps) {
   const isQuote = row.source === 'quote';
   const isLead = row.source === 'lead';
+  const canHandoffToSales = kind === 'lqt' && ['sales-assignment', 'assigned-leads'].includes(activeModule);
   const [title, setTitle] = useState(row.account || '');
   const [assigneeId, setAssigneeId] = useState(
     row.assignedTo || members.find((member) => member.name === row.owner)?.id || ''
@@ -1102,13 +1140,28 @@ function OperationsFormModal({ kind, row, members, salesMembers, activeModule, b
   const [note, setNote] = useState('');
   const [followUpAt, setFollowUpAt] = useState('');
   const [quotationAmount, setQuotationAmount] = useState('');
-  const [handoffToSales, setHandoffToSales] = useState(kind === 'lqt' && activeModule === 'sales-assignment');
-  const [leadStatus, setLeadStatus] = useState(row.leadStatus || (kind === 'lqt' ? 'Qualified' : 'Follow-up'));
+  const [handoffToSales, setHandoffToSales] = useState(canHandoffToSales);
+  const [leadStatus, setLeadStatus] = useState(
+    row.leadStatus || (kind === 'lqt' ? (canHandoffToSales ? 'Sales Assigned' : 'Qualified') : 'Follow-up')
+  );
   const [meetingAt, setMeetingAt] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const availableMembers = handoffToSales ? salesMembers : members;
   const memberById = new Map(availableMembers.map((member) => [member.id, member]));
   const inputClass = `w-full rounded-xl border ${roleClass.border} ${roleClass.inner} px-3 py-2.5 text-sm text-zinc-100 outline-none placeholder:text-zinc-500 ${roleClass.focus}`;
+  const assignedLabel = handoffToSales ? 'Sales person' : 'Assigned employee';
+  const assignedPlaceholder = handoffToSales ? 'Select sales person' : `Select ${kind} employee`;
+  const nextStepLabel = kind === 'sales' ? 'Next sales step' : kind === 'procurement' ? 'Next procurement step' : 'Next step';
+  const noteLabel = kind === 'sales' ? 'Customer conversation / call notes' : kind === 'procurement' ? 'Supplier conversation / notes' : 'Work note';
+  const statusLabel = kind === 'sales' ? 'Lead status' : 'Status';
+  const valueLabel =
+    kind === 'sales'
+      ? isQuote
+        ? 'Quotation amount (INR)'
+        : 'Quotation value'
+      : kind === 'procurement'
+        ? 'Supplier price / landed cost'
+        : 'Value';
 
   const submit = () => {
     const nextErrors: Record<string, string> = {};
@@ -1222,6 +1275,15 @@ function OperationsFormModal({ kind, row, members, salesMembers, activeModule, b
         </div>
 
         <div className="mt-5 grid gap-4 md:grid-cols-2">
+          {isLead && canHandoffToSales ? (
+            <div className={`md:col-span-2 rounded-xl border ${roleClass.borderSoft} ${roleClass.bgSoft} p-3 text-sm text-zinc-200`}>
+              <p className="font-semibold text-white">Sales handoff form</p>
+              <p className="mt-1 text-zinc-300">
+                Use this form to route the enquiry from LQT to the right sales person and mark the lead as assigned.
+              </p>
+            </div>
+          ) : null}
+
           <label>
             <span className="text-xs uppercase tracking-[0.14em] text-zinc-500">{isQuote ? 'Account' : kind === 'procurement' ? 'Supplier name' : 'Customer name'}</span>
             <input className={`${inputClass} mt-2`} value={title} onChange={(event) => setTitle(event.target.value)} disabled={isQuote} />
@@ -1229,13 +1291,13 @@ function OperationsFormModal({ kind, row, members, salesMembers, activeModule, b
           </label>
 
           <label>
-            <span className="text-xs uppercase tracking-[0.14em] text-zinc-500">Assigned employee</span>
+            <span className="text-xs uppercase tracking-[0.14em] text-zinc-500">{assignedLabel}</span>
             <select
               className={`${inputClass} mt-2`}
               value={assigneeId}
               onChange={(event) => setAssigneeId(event.target.value)}
             >
-              <option value="">Select {kind} employee</option>
+              <option value="">{assignedPlaceholder}</option>
               {availableMembers.map((member) => (
                 <option key={member.id} value={member.id}>
                   {member.name} ({member.email})
@@ -1284,12 +1346,14 @@ function OperationsFormModal({ kind, row, members, salesMembers, activeModule, b
                     setAssigneeId('');
                   }}
                 />
-                <span className="text-sm text-zinc-300">Qualified: hand off to Sales queue</span>
+                <span className="text-sm text-zinc-300">
+                  {canHandoffToSales ? 'Assign directly to Sales queue' : 'Qualified: hand off to Sales queue'}
+                </span>
               </label>
             </>
           ) : (
             <label>
-              <span className="text-xs uppercase tracking-[0.14em] text-zinc-500">Status</span>
+              <span className="text-xs uppercase tracking-[0.14em] text-zinc-500">{statusLabel}</span>
               {isLead ? (
                 <select className={`${inputClass} mt-2`} value={leadStatus} onChange={(event) => setLeadStatus(event.target.value)}>
                   {['Sales Assigned', 'Follow-up', 'Quotation Sent', 'Negotiation', 'Order Confirmed', 'Won', 'Lost'].map((item) => (
@@ -1303,14 +1367,14 @@ function OperationsFormModal({ kind, row, members, salesMembers, activeModule, b
           )}
 
           <label>
-            <span className="text-xs uppercase tracking-[0.14em] text-zinc-500">Next step</span>
+            <span className="text-xs uppercase tracking-[0.14em] text-zinc-500">{nextStepLabel}</span>
             <input className={`${inputClass} mt-2`} value={nextStep} onChange={(event) => setNextStep(event.target.value)} placeholder="Follow-up action" />
             {errors.nextStep ? <span className="mt-1 block text-xs text-red-300">{errors.nextStep}</span> : null}
           </label>
 
           {kind !== 'lqt' ? (
             <label>
-              <span className="text-xs uppercase tracking-[0.14em] text-zinc-500">{kind === 'sales' && isQuote ? 'Quotation amount (INR)' : 'Value'}</span>
+              <span className="text-xs uppercase tracking-[0.14em] text-zinc-500">{valueLabel}</span>
               <input
                 className={`${inputClass} mt-2`}
                 value={kind === 'sales' && isQuote ? quotationAmount : value}
@@ -1344,7 +1408,7 @@ function OperationsFormModal({ kind, row, members, salesMembers, activeModule, b
           ) : null}
 
           <label className="md:col-span-2">
-            <span className="text-xs uppercase tracking-[0.14em] text-zinc-500">Work note</span>
+            <span className="text-xs uppercase tracking-[0.14em] text-zinc-500">{noteLabel}</span>
             <textarea className={`${inputClass} mt-2`} rows={3} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Record what was checked, discussed, or changed" />
             {errors.note ? <span className="mt-1 block text-xs text-red-300">{errors.note}</span> : null}
           </label>
