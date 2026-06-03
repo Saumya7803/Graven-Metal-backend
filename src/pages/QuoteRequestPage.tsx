@@ -38,8 +38,9 @@ const nqtSteps = [
 ] as const;
 
 function formatMoney(currency: string | undefined, value: number) {
-  const normalized = (currency || 'INR').toUpperCase();
-  const locale = normalized === 'INR' ? 'en-IN' : 'en-US';
+  void currency;
+  const normalized = 'USD';
+  const locale = 'en-US';
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: normalized,
@@ -55,7 +56,7 @@ export function QuoteRequestPage() {
   const unitLabel = state?.unit || 'Kg';
   const unitPrice = state?.unitPrice || 0;
   const totalPrice = state?.totalPrice || (quantity && unitPrice ? quantity * unitPrice : 0);
-  const currency = state?.currency || 'INR';
+  const currency = 'USD';
 
   return (
     <MotionReveal>

@@ -10,6 +10,33 @@ import { publicApi } from '../lib/publicApi';
 import type { ApiProduct } from '../lib/publicApi';
 import { getProductFallbackImage, resolveProductImageUrl } from '../lib/image';
 
+const weightUnitToKg: Record<string, number> = {
+  g: 0.001,
+  gram: 0.001,
+  grams: 0.001,
+  kg: 1,
+  kilogram: 1,
+  kilograms: 1,
+  lb: 0.45359237,
+  lbs: 0.45359237,
+  pound: 0.45359237,
+  pounds: 0.45359237,
+  oz: 0.028349523125,
+  ounce: 0.028349523125,
+  ounces: 0.028349523125,
+  ton: 1000,
+  tonne: 1000,
+  t: 1000,
+};
+
+function getWeightMultiplier(weightUnit?: string) {
+  return weightUnit ? weightUnitToKg[weightUnit.toLowerCase()] || 1 : 1;
+}
+
+function getUnitPrice(product: ApiProduct) {
+  return (product.unitPrice ?? product.price * (product.weightPerUnit ?? 1) * getWeightMultiplier(product.weightUnit || product.unit)) || 0;
+}
+
 const specs = [
   ['Purity', '24K | 99.99%'],
   ['Weight', '10g, 20g, 50g, 100g, 1kg'],
@@ -19,8 +46,9 @@ const specs = [
 const features = ['100% Purity Guaranteed', 'Certified & Hallmarked', 'Secure Global Delivery', 'Best Market Pricing'];
 
 function formatMoney(currency: string | undefined, value: number) {
-  const normalized = (currency || 'INR').toUpperCase();
-  const locale = normalized === 'INR' ? 'en-IN' : 'en-US';
+  void currency;
+  const normalized = 'USD';
+  const locale = 'en-US';
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: normalized,
@@ -60,7 +88,7 @@ export function ProductDetailsPage() {
   const heroImage = resolveProductImageUrl(product?.image?.url, categoryName, 1280);
   const heroFallbackImage = getProductFallbackImage(categoryName);
   const unitLabel = product?.unitType || product?.unit || 'unit';
-  const unitPrice = product?.unitPrice || (product?.price || 0) * (product?.weightPerUnit || 1);
+  const unitPrice = product ? getUnitPrice(product) : 0;
   const totalPrice = unitPrice * qty;
 
   const handleHeroImageError = (event: SyntheticEvent<HTMLImageElement>) => {
@@ -88,12 +116,12 @@ export function ProductDetailsPage() {
           description: product.description || `${product.name} details`,
           image: heroImage || '/imgs/brand-mark.png',
           sku: product.slug || product._id,
-          offers: {
-            '@type': 'Offer',
-            priceCurrency: product.currency || 'INR',
-            price: unitPrice,
-            availability: 'https://schema.org/InStock',
-          },
+            offers: {
+              '@type': 'Offer',
+              priceCurrency: 'USD',
+              price: unitPrice,
+              availability: 'https://schema.org/InStock',
+            },
         }}
       />
       <p className="text-sm text-zinc-500">Home / Products / {product.name}</p>
@@ -188,16 +216,16 @@ export function ProductDetailsPage() {
             className="mt-5 w-full rounded-md bg-gold-cta py-3 font-semibold text-black shadow-gold transition hover:brightness-110"
             onClick={() =>
               navigate('/quote-request', {
-                state: {
-                  productName: product.name,
-                  quantity: qty,
-                  unit: unitLabel,
-                  unitPrice,
-                  totalPrice,
-                  currency: product.currency || 'INR',
-                  requirement: `Need ${qty} ${unitLabel} of ${product.name} with certificates and delivery support.`,
-                },
-              })
+                  state: {
+                    productName: product.name,
+                    quantity: qty,
+                    unit: unitLabel,
+                    unitPrice,
+                    totalPrice,
+                    currency: 'USD',
+                    requirement: `Need ${qty} ${unitLabel} of ${product.name} with certificates and delivery support.`,
+                  },
+                })
             }
           >
             Add to Quote
@@ -220,7 +248,7 @@ export function ProductDetailsPage() {
               key={r._id}
               id={r._id}
               name={r.name}
-              price={`${formatMoney(r.currency, r.unitPrice || r.price * (r.weightPerUnit || 1))} / ${r.unitType || r.unit || 'unit'}`}
+              price={`${formatMoney('USD', getUnitPrice(r))} / ${r.unitType || r.unit || 'unit'}`}
               category={typeof r.category === 'string' ? r.category : r.category?.name || 'Metal'}
               tint="from-zinc-500/20 to-zinc-800/20"
               imageUrl={r.image?.url}
