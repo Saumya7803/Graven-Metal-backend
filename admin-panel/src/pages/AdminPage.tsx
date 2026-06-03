@@ -851,6 +851,15 @@ export function AdminPage() {
     });
   };
 
+  const openAddProductForCategory = (category: ApiCategory) => {
+    setModalType('product');
+    setModalMode('create');
+    setProductForm({
+      ...defaultProductForm,
+      category: category._id,
+    });
+  };
+
   const openEditBlog = (item: ApiBlog) => {
     setModalType('blog');
     setModalMode('edit');
@@ -1752,6 +1761,14 @@ export function AdminPage() {
                         <td className="px-3 py-3 text-zinc-300">{item.productCount || 0}</td>
                         <td className="px-3 py-3">
                           <div className="flex gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => openAddProductForCategory(item)}
+                              className="inline-flex items-center gap-1 rounded-md border border-gold/20 bg-[#0f151e] px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-gold hover:border-gold/50"
+                            >
+                              <Plus size={13} />
+                              Add Item
+                            </button>
                             <button
                               type="button"
                               onClick={() => openEditCategory(item)}
