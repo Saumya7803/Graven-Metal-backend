@@ -9,6 +9,7 @@ import { getApiErrorMessage } from '../lib/apiUtils';
 import { publicApi } from '../lib/publicApi';
 import type { ApiProduct } from '../lib/publicApi';
 import { getProductFallbackImage, resolveProductImageUrl } from '../lib/image';
+import { CheckCircle2, FileText, MessageSquareMore, Package2, ShieldCheck, Star, Truck } from 'lucide-react';
 
 const weightUnitToKg: Record<string, number> = {
   g: 0.001,
@@ -50,18 +51,14 @@ function formatMoney(currency: string | undefined, value: number) {
   }).format(value);
 }
 
-const specs = [
-  ['Purity', '24K | 99.99%'],
-  ['Weight', '10g, 20g, 50g, 100g, 1kg'],
-  ['Form', 'Bar'],
-  ['Certificate', 'Yes'],
-];
 const features = ['100% Purity Guaranteed', 'Certified & Hallmarked', 'Secure Global Delivery', 'Best Market Pricing'];
 
 export function ProductDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
+  const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'composition' | 'mechanical' | 'documents'>('description');
+  const [activeImage, setActiveImage] = useState(0);
   const [product, setProduct] = useState<ApiProduct | null>(null);
   const [all, setAll] = useState<ApiProduct[]>([]);
 
@@ -85,18 +82,51 @@ export function ProductDetailsPage() {
       });
   }, [id]);
 
+  useEffect(() => {
+    setQty(1);
+    setActiveTab('description');
+    setActiveImage(0);
+  }, [id]);
+
   const related = useMemo(() => all.filter((x) => x._id !== id).slice(0, 5), [all, id]);
   const categoryName = typeof product?.category === 'string' ? product.category : product?.category?.name || '';
   const heroImage = resolveProductImageUrl(product?.image?.url, categoryName, 1280);
-  const heroFallbackImage = getProductFallbackImage(categoryName);
   const unitLabel = product?.unitType || product?.unit || 'unit';
   const unitPrice = product ? getUnitPrice(product) : 0;
   const totalPrice = unitPrice * qty;
+  const galleryImages = useMemo(() => {
+    const urls = [product?.image?.url, ...related.map((item) => item.image?.url)].filter(Boolean) as string[];
+    const resolved = urls
+      .map((url, index) => resolveProductImageUrl(url, index === 0 ? categoryName : '', index === 0 ? 1280 : 360))
+      .filter(Boolean) as string[];
+    return Array.from(new Set([heroImage, ...resolved].filter(Boolean) as string[])).slice(0, 5);
+  }, [categoryName, heroImage, product?.image?.url, related]);
+  const selectedImage = galleryImages[activeImage] || heroImage;
+  const selectedFallbackImage = getProductFallbackImage(categoryName);
+  const stockLabel =
+    product?.inStock === false ? 'Out of stock' : product?.stockQty ? `In stock (${product.stockQty}+ units)` : 'In stock';
+  const pricingDisplay = `${formatMoney(product?.currency, unitPrice)} / ${unitLabel}`;
+  const detailRows = [
+    ['Category', categoryName || 'Metal'],
+    ['Grade', product?.unitType || 'Standard'],
+    ['Size', product?.weightPerUnit ? `${product.weightPerUnit} ${product.weightUnit || product.unit || 'unit'}` : 'As per requirement'],
+    ['Length', product?.unit || 'As per size'],
+    ['Weight', product?.weightPerUnit ? `${product.weightPerUnit} ${product.weightUnit || 'kg'}` : 'As per order'],
+    ['Stock Availability', stockLabel],
+    ['MOQ', product?.moq ? `${product.moq} ${product.unitType || product.unit || 'unit'}` : 'On request'],
+  ];
+  const productTabs = [
+    { key: 'description', label: 'Description', icon: MessageSquareMore },
+    { key: 'specs', label: 'Specifications', icon: FileText },
+    { key: 'composition', label: 'Chemical Composition', icon: ShieldCheck },
+    { key: 'mechanical', label: 'Mechanical Properties', icon: Package2 },
+    { key: 'documents', label: 'Documents', icon: Truck },
+  ] as const;
 
   const handleHeroImageError = (event: SyntheticEvent<HTMLImageElement>) => {
-    if (!heroFallbackImage || event.currentTarget.dataset.fallbackApplied === 'true') return;
+    if (!selectedFallbackImage || event.currentTarget.dataset.fallbackApplied === 'true') return;
     event.currentTarget.dataset.fallbackApplied = 'true';
-    event.currentTarget.src = heroFallbackImage;
+    event.currentTarget.src = selectedFallbackImage;
   };
 
   if (!product) {
@@ -126,125 +156,277 @@ export function ProductDetailsPage() {
           },
         }}
       />
-      <p className="text-sm text-zinc-500">Home / Products / {product.name}</p>
-      <section className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
-        <div className="gm-shell p-3 sm:p-4 md:p-5">
-          <div className="h-[240px] overflow-hidden rounded-xl border border-gold/20 bg-gradient-to-br from-amber-500/20 to-zinc-900/30 sm:h-[320px] md:h-[420px]">
-            {heroImage ? (
-              <img
-                src={heroImage}
-                alt={product.name}
-                className="h-full w-full object-cover"
-                decoding="async"
-                fetchPriority="high"
-                onError={handleHeroImageError}
-              />
-            ) : null}
+      <p className="text-sm text-zinc-500">Home / Products / {categoryName || 'Product'} / {product.name}</p>
+      <section className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
+        <div className="rounded-[1.75rem] border border-gold/15 bg-[#070c12] p-3 shadow-halo sm:p-4">
+          <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-gradient-to-br from-zinc-900 via-black to-zinc-900">
+            <div className="relative aspect-[1.05/1] w-full">
+              {selectedImage ? (
+                <img
+                  src={selectedImage}
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                  decoding="async"
+                  fetchPriority="high"
+                  onError={handleHeroImageError}
+                />
+              ) : null}
+              <div className="absolute left-4 top-4 rounded-full border border-gold/25 bg-black/40 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-gold">
+                Live Product Details
+              </div>
+            </div>
           </div>
-          <div className="mt-5 rounded-xl border border-gold/15 bg-black/35 p-4">
-            <h3 className="text-lg font-semibold text-white">Product Specifications</h3>
-            <div className="mt-3 space-y-2">
-              {specs.map(([label, value]) => (
-                <div key={label} className="grid grid-cols-[85px_1fr] gap-2 border-b border-gold/10 pb-2 text-xs sm:grid-cols-[110px_1fr] sm:text-sm">
-                  <p className="text-zinc-400">{label}</p>
-                  <p className="break-words text-zinc-200">{value}</p>
+
+          <div className="mt-3 grid grid-cols-5 gap-2">
+            {galleryImages.map((image, index) => (
+              <button
+                key={`${image}-${index}`}
+                type="button"
+                onClick={() => setActiveImage(index)}
+                className={`overflow-hidden rounded-xl border transition ${
+                  activeImage === index ? 'border-gold shadow-gold' : 'border-white/10 opacity-80 hover:opacity-100'
+                }`}
+              >
+                <img src={image} alt={`${product.name} gallery ${index + 1}`} className="h-20 w-full object-cover" />
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-4 overflow-hidden rounded-[1.25rem] border border-white/10 bg-[#0a1017]">
+            <div className="flex flex-wrap gap-2 border-b border-white/10 px-3 pt-3">
+              {productTabs.map((tab) => {
+                const Icon = tab.icon;
+                const selected = activeTab === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`inline-flex items-center gap-2 rounded-t-xl border px-4 py-2 text-sm font-semibold transition ${
+                      selected
+                        ? 'border-gold/30 bg-gold/10 text-gold'
+                        : 'border-transparent bg-transparent text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    <Icon size={14} />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="p-4 sm:p-5">
+              {activeTab === 'description' ? (
+                <p className="text-sm leading-7 text-zinc-300">
+                  {product.description ||
+                    `${product.name} is available for industrial procurement with responsive sourcing support, packaging coordination, and quotation follow-up.`}
+                </p>
+              ) : null}
+
+              {activeTab === 'specs' ? (
+                <div className="space-y-2">
+                  {detailRows.map(([label, value]) => (
+                    <div key={label} className="grid grid-cols-[120px_1fr] gap-3 border-b border-white/8 pb-2 text-sm">
+                      <p className="text-zinc-500">{label}</p>
+                      <p className="text-zinc-200">{value}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              ) : null}
+
+              {activeTab === 'composition' ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    ['Copper', '99.99%'],
+                    ['Iron', '0.01%'],
+                    ['Carbon', 'Trace'],
+                    ['Other Elements', 'As per order specification'],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-xl border border-white/10 bg-black/20 p-3">
+                      <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">{label}</p>
+                      <p className="mt-1 text-sm font-semibold text-zinc-100">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {activeTab === 'mechanical' ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {[
+                    ['Tensile Strength', 'High'],
+                    ['Hardness', 'Industrial Grade'],
+                    ['Conductivity', 'Premium'],
+                    ['Finish', 'Mill / Polished / As required'],
+                  ].map(([label, value]) => (
+                    <div key={label} className="rounded-xl border border-white/10 bg-black/20 p-3">
+                      <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">{label}</p>
+                      <p className="mt-1 text-sm font-semibold text-zinc-100">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {activeTab === 'documents' ? (
+                <div className="space-y-3">
+                  {[
+                    'Mill Test Certificate',
+                    'Quality Inspection Report',
+                    'Packing List',
+                    'Commercial Invoice',
+                  ].map((item) => (
+                    <div key={item} className="flex items-center justify-between rounded-xl border border-white/10 bg-black/20 px-3 py-3">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle2 size={16} className="text-emerald-300" />
+                        <p className="text-sm text-zinc-100">{item}</p>
+                      </div>
+                      <span className="text-xs uppercase tracking-[0.14em] text-zinc-500">Available on request</span>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
-        <aside className="gm-shell p-4 sm:p-5">
-          <h1 className="font-display text-3xl text-white sm:text-4xl">{product.name}</h1>
-          <p className="mt-1 text-sm text-zinc-400">{typeof product.category === 'string' ? product.category : product.category?.name || 'Premium Grade'}</p>
 
-          <div className="mt-4 rounded-2xl border border-gold/15 bg-black/30 p-4">
-            <div className="flex items-center justify-between gap-4">
+        <aside className="rounded-[1.75rem] border border-gold/15 bg-[#070c12] p-4 shadow-halo sm:p-5">
+          <p className="text-xs uppercase tracking-[0.24em] text-gold">Home / Products / {categoryName || 'Metal'}</p>
+          <h1 className="mt-2 font-display text-3xl text-white sm:text-4xl">{product.name}</h1>
+          <p className="mt-2 text-sm text-zinc-400">{categoryName || 'Premium Grade'}</p>
+
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold">
+              <Star size={12} fill="currentColor" />
+              Live Price
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+              {product.inStock === false ? 'Out of Stock' : 'In Stock'}
+            </span>
+          </div>
+
+          <div className="mt-5 border-y border-white/10 py-4">
+            <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Unit Price</p>
+            <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">Unit Price</p>
-                <p className="mt-1 text-2xl font-semibold text-gold sm:text-3xl">
-                  {formatMoney(product.currency, unitPrice)} / {unitLabel}
-                </p>
+                <p className="text-3xl font-extrabold text-gold sm:text-4xl">{pricingDisplay}</p>
+                <p className="mt-1 text-xs text-zinc-500">Inclusive of all taxes and packaging where applicable</p>
               </div>
-              <div className="rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold">
-                {product.inStock === false ? 'Out of stock' : 'Available'}
-              </div>
-            </div>
-
-            <div className="mt-5 grid gap-4 rounded-xl border border-white/5 bg-[#06090d] p-4">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-medium text-zinc-300">Quantity</span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    aria-label="Decrease quantity"
-                    onClick={() => setQty((current) => Math.max(1, current - 1))}
-                    className="grid h-9 w-9 place-items-center rounded-md border border-gold/20 bg-black/35 text-lg font-semibold text-white transition hover:border-gold/40 hover:bg-gold/10"
-                  >
-                    -
-                  </button>
-                  <span className="min-w-10 rounded-md border border-gold/15 bg-black/40 px-4 py-2 text-center text-base font-semibold text-white">
-                    {qty}
-                  </span>
-                  <button
-                    type="button"
-                    aria-label="Increase quantity"
-                    onClick={() => setQty((current) => current + 1)}
-                    className="grid h-9 w-9 place-items-center rounded-md border border-gold/20 bg-black/35 text-lg font-semibold text-white transition hover:border-gold/40 hover:bg-gold/10"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-              <div className="flex items-center justify-between gap-3 border-t border-white/5 pt-4">
-                <span className="text-sm font-medium text-zinc-300">Total</span>
-                <span className="text-2xl font-semibold text-white">{formatMoney(product.currency, totalPrice)}</span>
+              <div className="rounded-full border border-gold/15 bg-black/20 px-3 py-1 text-xs font-semibold text-zinc-300">
+                MOQ {product.moq ? `${product.moq} ${unitLabel}` : 'On request'}
               </div>
             </div>
           </div>
 
-          <p className={product.inStock === false ? 'mt-2 text-xs text-red-300' : 'mt-2 text-xs text-emerald-400'}>
-            {product.inStock === false ? 'Out of Stock' : 'In Stock'}
-          </p>
-          <ul className="mt-4 space-y-2 text-sm text-zinc-300">
-            {features.map((feature) => (
-              <li key={feature} className="flex items-center gap-2">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-gold" />
-                {feature}
-              </li>
+          <div className="mt-4 grid gap-2">
+            {detailRows.slice(0, 7).map(([label, value]) => (
+              <div key={label} className="flex items-start justify-between gap-4 border-b border-white/8 pb-2 text-sm">
+                <span className="text-zinc-500">{label}</span>
+                <span className="max-w-[58%] text-right text-zinc-100">{value}</span>
+              </div>
             ))}
-          </ul>
-          <button
-            type="button"
-            className="mt-5 w-full rounded-md bg-gold-cta py-3 font-semibold text-black shadow-gold transition hover:brightness-110"
-            onClick={() =>
-              navigate('/quote-request', {
-                state: {
-                  productName: product.name,
-                  quantity: qty,
-                  unit: unitLabel,
-                  unitPrice,
-                  totalPrice,
-                  currency: product.currency || 'USD',
-                  requirement: `Need ${qty} ${unitLabel} of ${product.name} with certificates and delivery support.`,
-                },
-              })
-            }
-          >
-            Add to Quote
-          </button>
-          <a
-            href="https://wa.me/12125550148"
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 block w-full rounded-md border border-emerald-500/40 bg-emerald-500/10 py-2.5 text-center text-sm font-medium text-emerald-300"
-          >
-            Chat on WhatsApp
-          </a>
+          </div>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <button
+              type="button"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold-cta px-4 py-3 text-sm font-bold text-black shadow-gold transition hover:brightness-110 sm:col-span-1"
+              onClick={() =>
+                navigate('/quote-request', {
+                  state: {
+                    productName: product.name,
+                    quantity: qty,
+                    unit: unitLabel,
+                    unitPrice,
+                    totalPrice,
+                    currency: product.currency || 'USD',
+                    requirement: `Need ${qty} ${unitLabel} of ${product.name} with certificates and delivery support.`,
+                  },
+                })
+              }
+            >
+              Request Quote
+            </button>
+            <button
+              type="button"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-gold/25 bg-black/20 px-4 py-3 text-sm font-semibold text-gold transition hover:border-gold/45 hover:bg-gold/10"
+              onClick={() =>
+                navigate('/quote-request', {
+                  state: {
+                    productName: product.name,
+                    quantity: qty,
+                    unit: unitLabel,
+                    unitPrice,
+                    totalPrice,
+                    currency: product.currency || 'USD',
+                    requirement: `Add ${qty} ${unitLabel} of ${product.name} to enquiry queue.`,
+                  },
+                })
+              }
+            >
+              Add to Enquiry
+            </button>
+            <a
+              href="https://wa.me/12125550148"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-300 transition hover:border-emerald-400/60 hover:bg-emerald-500/15"
+            >
+              WhatsApp
+            </a>
+          </div>
+
+          <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold text-white">Quantity</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label="Decrease quantity"
+                  onClick={() => setQty((current) => Math.max(1, current - 1))}
+                  className="grid h-9 w-9 place-items-center rounded-md border border-gold/20 bg-black/35 text-lg font-semibold text-white transition hover:border-gold/40 hover:bg-gold/10"
+                >
+                  -
+                </button>
+                <span className="min-w-10 rounded-md border border-gold/15 bg-black/40 px-4 py-2 text-center text-base font-semibold text-white">
+                  {qty}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Increase quantity"
+                  onClick={() => setQty((current) => current + 1)}
+                  className="grid h-9 w-9 place-items-center rounded-md border border-gold/20 bg-black/35 text-lg font-semibold text-white transition hover:border-gold/40 hover:bg-gold/10"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/5 pt-4">
+              <span className="text-sm font-medium text-zinc-300">Total Estimate</span>
+              <span className="text-2xl font-semibold text-white">{formatMoney(product.currency, totalPrice)}</span>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-2">
+            {features.map((feature) => (
+              <div key={feature} className="flex items-center gap-2 text-sm text-zinc-300">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gold/10 text-gold">
+                  <CheckCircle2 size={13} />
+                </span>
+                {feature}
+              </div>
+            ))}
+          </div>
         </aside>
       </section>
-      <section className="gm-shell p-5">
-        <h2 className="font-display text-2xl text-white">Related Products</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+
+      <section className="rounded-[1.75rem] border border-gold/15 bg-[#070c12] p-4 shadow-halo sm:p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.22em] text-gold">Related Metals</p>
+            <h2 className="mt-2 font-display text-2xl text-white">Similar products</h2>
+          </div>
+          <span className="text-sm text-zinc-500">Recommended from the current catalog</span>
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           {related.map((r) => (
             <ProductCard
               key={r._id}
