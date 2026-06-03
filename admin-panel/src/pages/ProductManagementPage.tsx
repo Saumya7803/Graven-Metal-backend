@@ -40,6 +40,7 @@ type ProductForm = {
   moq: number;
   stockQty: number;
   file: File | null;
+  existingImageUrl: string;
 };
 
 const defaultForm: ProductForm = {
@@ -56,6 +57,7 @@ const defaultForm: ProductForm = {
   moq: 1,
   stockQty: 0,
   file: null,
+  existingImageUrl: '',
 };
 
 function formatCurrency(currency: string | undefined, value: number) {
@@ -89,6 +91,28 @@ function getUnitLabel(product: ApiProduct) {
   return product.unitType || product.unit || 'unit';
 }
 
+function getProductInitials(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || '')
+    .join('') || 'PR';
+}
+
+function ProductFallback({ name }: { name: string }) {
+  return (
+    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#151b22] via-[#0d1218] to-[#090d12]">
+      <div className="flex flex-col items-center gap-1 text-center">
+        <ImagePlus className="text-gold/70" size={18} />
+        <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-400">
+          {getProductInitials(name)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function ProductManagementPage() {
   const navigate = useNavigate();
   const user = getAuthUser();
@@ -103,6 +127,7 @@ export function ProductManagementPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<ModerationFilter>('all');
   const [productForm, setProductForm] = useState<ProductForm>(defaultForm);
+  const [formPreviewUrl, setFormPreviewUrl] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -170,6 +195,7 @@ export function ProductManagementPage() {
       moq: product.moq || 1,
       stockQty: product.stockQty || 0,
       file: null,
+      existingImageUrl: product.image?.url || '',
     });
     setViewMode('add');
   };
@@ -178,6 +204,17 @@ export function ProductManagementPage() {
     const file = event.target.files?.[0] || null;
     setProductForm((prev) => ({ ...prev, file }));
   };
+
+  useEffect(() => {
+    if (!productForm.file) {
+      setFormPreviewUrl('');
+      return;
+    }
+
+    const preview = URL.createObjectURL(productForm.file);
+    setFormPreviewUrl(preview);
+    return () => URL.revokeObjectURL(preview);
+  }, [productForm.file]);
 
   const submitProduct = async (event: FormEvent) => {
     event.preventDefault();
@@ -239,6 +276,7 @@ export function ProductManagementPage() {
   const approvedCount = products.filter((item) => getModerationLabel(item).label === 'Approved').length;
   const pendingCount = products.filter((item) => getModerationLabel(item).label === 'Pending Approval').length;
   const removalCount = products.filter((item) => getModerationLabel(item).label === 'Removal Requested').length;
+  const currentFormImage = formPreviewUrl || productForm.existingImageUrl;
 
   const approveProduct = async (product: ApiProduct) => {
     setSaving(true);
@@ -441,11 +479,15 @@ export function ProductManagementPage() {
                             <tr key={product._id} className="border-t border-gold/10 align-top">
                               <td className="px-4 py-3">
                                 <div className="h-14 w-14 overflow-hidden rounded-xl border border-gold/15 bg-[#0d1218]">
-                                  <img
-                                    src={product.image?.url || '/imgs/brand-mark.png'}
-                                    alt={product.name}
-                                    className="h-full w-full object-cover"
-                                  />
+                                  {product.image?.url ? (
+                                    <img
+                                      src={product.image.url}
+                                      alt={product.name}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <ProductFallback name={product.name} />
+                                  )}
                                 </div>
                               </td>
                               <td className="px-4 py-3">
@@ -710,11 +752,26 @@ export function ProductManagementPage() {
 
                     <div className="block">
                       <span className="text-xs uppercase tracking-[0.16em] text-zinc-500">Product Image</span>
-                      <label className="mt-2 flex cursor-pointer items-center justify-center gap-3 rounded-2xl border border-dashed border-gold/25 bg-[#0d1218] px-4 py-8 text-center">
-                        <Upload className="text-gold" size={18} />
-                        <span className="text-sm text-zinc-300">{productForm.file ? productForm.file.name : 'Upload image or replace the current one'}</span>
-                        <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
-                      </label>
+                      <div className="mt-2 overflow-hidden rounded-2xl border border-gold/15 bg-[#0d1218]">
+                        <div className="grid min-h-[180px] place-items-center border-b border-gold/10 bg-[#090d12]">
+                          {currentFormImage ? (
+                            <img
+                              src={currentFormImage}
+                              alt={productForm.name || 'Selected product'}
+                              className="h-full max-h-[180px] w-full object-cover"
+                            />
+                          ) : (
+                            <ProductFallback name={productForm.name || 'Product'} />
+                          )}
+                        </div>
+                        <label className="flex cursor-pointer items-center justify-center gap-3 px-4 py-4 text-center transition hover:bg-white/3">
+                          <Upload className="text-gold" size={18} />
+                          <span className="text-sm text-zinc-300">
+                            {productForm.file ? productForm.file.name : 'Upload image to preview here'}
+                          </span>
+                          <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
+                        </label>
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap gap-3 pt-2">
