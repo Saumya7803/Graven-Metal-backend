@@ -65,6 +65,10 @@ export function getDefaultRouteForRole(role?: string) {
   if (role === 'lqt') return '/lqt';
   if (role === 'sales') return '/sales';
   if (role === 'procurement') return '/procurement';
+  if (role === 'cct') return '/cct';
+  if (role === 'inventory') return '/inventory';
+  if (role === 'dispatch') return '/dispatch';
+  if (role === 'finance') return '/finance';
   if (role === 'data_entry') return '/admin/products';
   if (role === 'developer') return '/admin/products';
   if (role === 'admin' || role === 'editor') return '/admin';

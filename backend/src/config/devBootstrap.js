@@ -11,6 +11,10 @@ const DEV_CUSTOMER_PASSWORD = process.env.DEV_CUSTOMER_PASSWORD || 'Password123'
 const DEV_LQT_EMAIL = process.env.DEV_LQT_EMAIL || 'lqt@graven.local';
 const DEV_SALES_EMAIL = process.env.DEV_SALES_EMAIL || 'sales@graven.local';
 const DEV_PROCUREMENT_EMAIL = process.env.DEV_PROCUREMENT_EMAIL || 'procurement@graven.local';
+const DEV_CCT_EMAIL = process.env.DEV_CCT_EMAIL || 'cct@graven.local';
+const DEV_INVENTORY_EMAIL = process.env.DEV_INVENTORY_EMAIL || 'inventory@graven.local';
+const DEV_DISPATCH_EMAIL = process.env.DEV_DISPATCH_EMAIL || 'dispatch@graven.local';
+const DEV_FINANCE_EMAIL = process.env.DEV_FINANCE_EMAIL || 'finance@graven.local';
 const DEV_DEVELOPER_EMAIL = process.env.DEV_DEVELOPER_EMAIL || 'developer@graven.local';
 
 const removedCatalogCategorySlugs = ['gold', 'silver', 'lead'];
@@ -276,6 +280,10 @@ export const ensureDevUsers = async () => {
     { name: 'Local LQT Lead', email: DEV_LQT_EMAIL, role: 'lqt' },
     { name: 'Local Sales Lead', email: DEV_SALES_EMAIL, role: 'sales' },
     { name: 'Local Procurement Lead', email: DEV_PROCUREMENT_EMAIL, role: 'procurement' },
+    { name: 'Local CCT Lead', email: DEV_CCT_EMAIL, role: 'cct' },
+    { name: 'Local Inventory Lead', email: DEV_INVENTORY_EMAIL, role: 'inventory' },
+    { name: 'Local Dispatch Lead', email: DEV_DISPATCH_EMAIL, role: 'dispatch' },
+    { name: 'Local Finance Lead', email: DEV_FINANCE_EMAIL, role: 'finance' },
     { name: 'Local Developer', email: DEV_DEVELOPER_EMAIL, role: 'developer' },
   ];
 

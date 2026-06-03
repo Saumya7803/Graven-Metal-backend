@@ -65,6 +65,10 @@ export const login = asyncHandler(async (req, res) => {
     'lqt',
     'sales',
     'procurement',
+    'cct',
+    'inventory',
+    'dispatch',
+    'finance',
     'admin',
     'data_entry',
     'editor',
@@ -79,7 +83,7 @@ export const login = asyncHandler(async (req, res) => {
 
 export const loginAdmin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const result = await loginByRole(email, password, ['lqt', 'sales', 'procurement', 'admin', 'data_entry', 'editor', 'developer'], {
+  const result = await loginByRole(email, password, ['lqt', 'sales', 'procurement', 'cct', 'inventory', 'dispatch', 'finance', 'admin', 'data_entry', 'editor', 'developer'], {
     singleActiveSession: true,
   });
   if (result.error) {

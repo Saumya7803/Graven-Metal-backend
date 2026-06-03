@@ -7,6 +7,7 @@ import {
   Calendar,
   CheckCircle2,
   ClipboardList,
+  Database,
   Clock,
   FileSpreadsheet,
   FileText,
@@ -36,8 +37,15 @@ import { SEO } from '../components/seo/SEO';
 import { clearAuth, getAuthUser } from '../lib/auth';
 import { operationsApi, type OperationMember, type OperationRow, type WebsiteLeadStats } from '../lib/operationsApi';
 
-type DashboardKind = 'lqt' | 'sales' | 'procurement';
+type DashboardKind = 'lqt' | 'sales' | 'procurement' | 'cct' | 'inventory' | 'dispatch' | 'finance';
 type Tone = 'gold' | 'green' | 'blue' | 'red' | 'violet';
+
+const recordTeamKinds = ['sales', 'procurement', 'cct', 'inventory', 'dispatch', 'finance'] as const;
+type RecordTeamKind = (typeof recordTeamKinds)[number];
+
+function isRecordTeamKind(kind: DashboardKind): kind is RecordTeamKind {
+  return recordTeamKinds.includes(kind as RecordTeamKind);
+}
 
 type Metric = {
   label: string;
@@ -280,6 +288,62 @@ const roleThemes: Record<DashboardKind, RoleTheme> = {
     glowLeft: 'bg-sky-400/20',
     glowRight: 'bg-indigo-400/20',
   },
+  cct: {
+    accentRgb: '251 191 36',
+    accentStrongRgb: '245 158 11',
+    accentLightRgb: '252 211 77',
+    pageRgb: '10 8 3',
+    surfaceRgb: '20 15 5',
+    surfaceAltRgb: '33 23 7',
+    headerRgb: '35 25 8',
+    sidebarRgb: '16 12 4',
+    cardRgb: '23 17 7',
+    innerRgb: '14 11 5',
+    glowLeft: 'bg-amber-400/25',
+    glowRight: 'bg-yellow-300/20',
+  },
+  inventory: {
+    accentRgb: '56 189 248',
+    accentStrongRgb: '14 165 233',
+    accentLightRgb: '165 243 252',
+    pageRgb: '4 10 18',
+    surfaceRgb: '6 18 30',
+    surfaceAltRgb: '8 26 43',
+    headerRgb: '8 23 41',
+    sidebarRgb: '5 13 24',
+    cardRgb: '7 22 34',
+    innerRgb: '7 18 30',
+    glowLeft: 'bg-sky-400/20',
+    glowRight: 'bg-cyan-300/20',
+  },
+  dispatch: {
+    accentRgb: '251 146 60',
+    accentStrongRgb: '249 115 22',
+    accentLightRgb: '253 186 116',
+    pageRgb: '17 7 4',
+    surfaceRgb: '30 12 7',
+    surfaceAltRgb: '42 19 9',
+    headerRgb: '43 19 10',
+    sidebarRgb: '23 10 6',
+    cardRgb: '31 14 8',
+    innerRgb: '22 11 7',
+    glowLeft: 'bg-orange-400/20',
+    glowRight: 'bg-red-400/15',
+  },
+  finance: {
+    accentRgb: '52 211 153',
+    accentStrongRgb: '16 185 129',
+    accentLightRgb: '134 239 172',
+    pageRgb: '3 12 8',
+    surfaceRgb: '4 20 14',
+    surfaceAltRgb: '8 31 21',
+    headerRgb: '8 34 23',
+    sidebarRgb: '3 16 11',
+    cardRgb: '6 25 17',
+    innerRgb: '5 20 14',
+    glowLeft: 'bg-emerald-400/20',
+    glowRight: 'bg-lime-300/15',
+  },
 };
 
 const configs: Record<DashboardKind, DashboardConfig> = {
@@ -419,6 +483,184 @@ const configs: Record<DashboardKind, DashboardConfig> = {
       'Bharat Alloys reminder queued',
     ],
     priorities: ['Close pending price requests', 'Compare top vendor offers', 'Raise approved POs', 'Escalate availability risks'],
+  },
+  cct: {
+    title: 'CCT Dashboard',
+    eyebrow: 'Control Room',
+    route: '/cct',
+    roleLabel: 'CCT',
+    theme: roleThemes.cct,
+    primaryColumn: 'Approval',
+    detailColumn: 'Commercial Gatekeeping',
+    stats: [
+      { label: 'Approval Queue', value: '16', helper: 'Items awaiting review', icon: ShieldCheck, tone: 'gold' },
+      { label: 'Margin Checks', value: '9', helper: 'Commercial safeguard reviews', icon: TrendingUp, tone: 'red' },
+      { label: 'Pricing Approvals', value: '11', helper: 'Price sign-off pending', icon: FileText, tone: 'green' },
+      { label: 'Escalations', value: '4', helper: 'Requires leadership input', icon: Activity, tone: 'violet' },
+    ],
+    statuses: [
+      { label: 'Pending', value: 16, tone: 'gold' },
+      { label: 'Reviewed', value: 11, tone: 'green' },
+      { label: 'On Hold', value: 5, tone: 'blue' },
+      { label: 'Escalated', value: 4, tone: 'red' },
+    ],
+    modules: [
+      { key: 'overview', label: 'Dashboard Overview', icon: BarChart3, metric: '83%', helper: 'Approval SLA' },
+      { key: 'approval-queue', label: 'Approval Queue', icon: ClipboardList, metric: '16', helper: 'Pending commercial review' },
+      { key: 'margin-review', label: 'Margin Review', icon: TrendingUp, metric: '9', helper: 'Protect profit before release' },
+      { key: 'cost-review', label: 'Cost Review', icon: FileText, metric: '12', helper: 'Input cost validation' },
+      { key: 'target-price-review', label: 'Target Price Review', icon: Target, metric: '8', helper: 'Target price governance' },
+      { key: 'commercial-approval', label: 'Commercial Approval', icon: ShieldCheck, metric: '11', helper: 'Commercial releases' },
+      { key: 'pricing-approval', label: 'Pricing Approval', icon: CheckCircle2, metric: '14', helper: 'Price sign-off' },
+      { key: 'sourcing-approval', label: 'Sourcing Approval', icon: Truck, metric: '6', helper: 'Source validation' },
+      { key: 'approval-history', label: 'Approval History', icon: History, metric: '41', helper: 'Decision history' },
+    ],
+    rows: [
+      { account: 'Pioneer Infra', owner: 'Neha', detail: 'Price release for copper cathode RFQ', status: 'Pending', next: 'Approve commercial note', value: '₹42L' },
+      { account: 'Vertex Components', owner: 'Aarav', detail: 'Margin check on brass rods order', status: 'Reviewed', next: 'Await final pricing', value: '7.8%' },
+      { account: 'Apex Rail Systems', owner: 'Isha', detail: 'Target price review for steel coils', status: 'On Hold', next: 'Request supplier support', value: '₹27L' },
+      { account: 'Kavya Electricals', owner: 'Rohan', detail: 'Escalation for payment-linked release', status: 'Escalated', next: 'Commercial sign-off', value: 'High' },
+    ],
+    activity: [
+      'Pioneer Infra price request moved to commercial queue',
+      'Vertex Components margin check completed',
+      'Apex Rail Systems target price escalated',
+      'Kavya Electricals approval history updated',
+    ],
+    priorities: ['Clear commercial approvals', 'Review margin exceptions', 'Resolve escalations', 'Document approval history'],
+  },
+  inventory: {
+    title: 'Inventory Dashboard',
+    eyebrow: 'Stock Control Team',
+    route: '/inventory',
+    roleLabel: 'Inventory',
+    theme: roleThemes.inventory,
+    primaryColumn: 'Warehouse',
+    detailColumn: 'Inventory Work',
+    stats: [
+      { label: 'Stock on Hand', value: '1.8K', helper: 'Across all warehouses', icon: Package, tone: 'blue' },
+      { label: 'GRNs', value: '22', helper: 'Goods receipts posted', icon: ClipboardList, tone: 'gold' },
+      { label: 'Transfers', value: '9', helper: 'Warehouse movements', icon: ArrowRight, tone: 'green' },
+      { label: 'Alerts', value: '5', helper: 'Stock or batch warnings', icon: Activity, tone: 'red' },
+    ],
+    statuses: [
+      { label: 'In Stock', value: 34, tone: 'green' },
+      { label: 'Low Stock', value: 8, tone: 'gold' },
+      { label: 'In Transit', value: 9, tone: 'blue' },
+      { label: 'Blocked', value: 5, tone: 'red' },
+    ],
+    modules: [
+      { key: 'overview', label: 'Dashboard Overview', icon: BarChart3, metric: '96%', helper: 'Inventory accuracy' },
+      { key: 'inventory-dashboard', label: 'Inventory Dashboard', icon: Package, metric: '1.8K', helper: 'Stock snapshot' },
+      { key: 'warehouses', label: 'Warehouses', icon: Database, metric: '6', helper: 'Active warehouses' },
+      { key: 'stock', label: 'Stock Control', icon: SlidersHorizontal, metric: '34', helper: 'Stock movements' },
+      { key: 'grn', label: 'GRN', icon: ClipboardList, metric: '22', helper: 'Receipts posted' },
+      { key: 'transfers', label: 'Transfers', icon: ArrowRight, metric: '9', helper: 'Warehouse transfers' },
+      { key: 'alerts', label: 'Alerts', icon: Activity, metric: '5', helper: 'Warnings and holds' },
+      { key: 'batch-tracking', label: 'Batch Tracking', icon: History, metric: '18', helper: 'Batch history' },
+      { key: 'inventory-reports', label: 'Inventory Reports', icon: FileSpreadsheet, metric: '12', helper: 'Report exports' },
+    ],
+    rows: [
+      { account: 'Warehouse A', owner: 'Anika', detail: 'Copper cathode batch received', status: 'In Stock', next: 'Post GRN', value: '320 MT' },
+      { account: 'Warehouse B', owner: 'Kabir', detail: 'Steel coil transfer pending', status: 'In Transit', next: 'Confirm receipt', value: '48 MT' },
+      { account: 'Central Yard', owner: 'Meera', detail: 'Brass rods low stock alert', status: 'Low Stock', next: 'Trigger reorder', value: '12 MT' },
+      { account: 'Dispatch Hold', owner: 'Rohan', detail: 'Batch blocked for quality check', status: 'Blocked', next: 'Resolve hold', value: 'High' },
+    ],
+    activity: [
+      'Warehouse A GRN posted for copper cathode',
+      'Warehouse B transfer updated',
+      'Brass rods low stock alert created',
+      'Batch hold escalated to quality review',
+    ],
+    priorities: ['Post pending GRNs', 'Resolve low stock alerts', 'Complete warehouse transfers', 'Review blocked batches'],
+  },
+  dispatch: {
+    title: 'Dispatch Dashboard',
+    eyebrow: 'Dispatch & Logistics',
+    route: '/dispatch',
+    roleLabel: 'Dispatch',
+    theme: roleThemes.dispatch,
+    primaryColumn: 'Shipment',
+    detailColumn: 'Dispatch Work',
+    stats: [
+      { label: 'Ready to Ship', value: '14', helper: 'Packed and awaiting pickup', icon: Truck, tone: 'blue' },
+      { label: 'Vehicles Assigned', value: '7', helper: 'Active routes', icon: Package, tone: 'gold' },
+      { label: 'POD Pending', value: '6', helper: 'Proof of delivery required', icon: ClipboardList, tone: 'red' },
+      { label: 'Delivered', value: '26', helper: 'Completed dispatches', icon: CheckCircle2, tone: 'green' },
+    ],
+    statuses: [
+      { label: 'Ready', value: 14, tone: 'gold' },
+      { label: 'Packed', value: 11, tone: 'blue' },
+      { label: 'In Transit', value: 9, tone: 'red' },
+      { label: 'Delivered', value: 26, tone: 'green' },
+    ],
+    modules: [
+      { key: 'overview', label: 'Dashboard Overview', icon: BarChart3, metric: '91%', helper: 'Dispatch readiness' },
+      { key: 'dispatch-dashboard', label: 'Dispatch Dashboard', icon: Truck, metric: '14', helper: 'Shipments ready' },
+      { key: 'packaging', label: 'Packaging', icon: Package, metric: '11', helper: 'Packed orders' },
+      { key: 'vehicle-assignment', label: 'Vehicle Assignment', icon: Users, metric: '7', helper: 'Routes assigned' },
+      { key: 'tracking', label: 'Tracking', icon: Globe2, metric: '9', helper: 'Live transit updates' },
+      { key: 'pod-upload', label: 'POD Upload', icon: FileText, metric: '6', helper: 'Pending proofs' },
+      { key: 'delivery-reports', label: 'Delivery Reports', icon: FileSpreadsheet, metric: '10', helper: 'Completed shipments' },
+      { key: 'logistics', label: 'Logistics', icon: Activity, metric: '18', helper: 'Route and lane control' },
+    ],
+    rows: [
+      { account: 'Apex Rail Systems', owner: 'Rahul', detail: 'Steel coils packed for pickup', status: 'Packed', next: 'Assign vehicle', value: '2 pallets' },
+      { account: 'Pioneer Infra', owner: 'Anita', detail: 'Copper cathode ready dispatch', status: 'Ready', next: 'Schedule dispatch', value: 'Truck A' },
+      { account: 'Vertex Components', owner: 'Kabir', detail: 'POD upload pending', status: 'In Transit', next: 'Collect delivery proof', value: 'Due today' },
+      { account: 'Kavya Electricals', owner: 'Meera', detail: 'Delivered and awaiting closeout', status: 'Delivered', next: 'Share report', value: 'Complete' },
+    ],
+    activity: [
+      'Truck assignment updated for Apex Rail Systems',
+      'Pioneer Infra dispatch schedule confirmed',
+      'Vertex Components proof of delivery requested',
+      'Kavya Electricals delivery report generated',
+    ],
+    priorities: ['Assign delivery vehicles', 'Upload POD documents', 'Close delivered shipments', 'Share delivery reports'],
+  },
+  finance: {
+    title: 'Finance Dashboard',
+    eyebrow: 'Accounts & Collections',
+    route: '/finance',
+    roleLabel: 'Finance',
+    theme: roleThemes.finance,
+    primaryColumn: 'Invoice',
+    detailColumn: 'Finance Work',
+    stats: [
+      { label: 'Invoices', value: '18', helper: 'Ready or issued', icon: FileText, tone: 'blue' },
+      { label: 'Collections', value: '12', helper: 'Payments received', icon: ClipboardList, tone: 'green' },
+      { label: 'Receivables', value: '7', helper: 'Outstanding balances', icon: Mail, tone: 'gold' },
+      { label: 'Margin Review', value: '4', helper: 'Profit checks pending', icon: TrendingUp, tone: 'violet' },
+    ],
+    statuses: [
+      { label: 'Pending', value: 18, tone: 'gold' },
+      { label: 'Issued', value: 12, tone: 'blue' },
+      { label: 'Part Paid', value: 7, tone: 'red' },
+      { label: 'Cleared', value: 22, tone: 'green' },
+    ],
+    modules: [
+      { key: 'overview', label: 'Dashboard Overview', icon: BarChart3, metric: '88%', helper: 'Collection health' },
+      { key: 'invoice-queue', label: 'Invoice Queue', icon: FileText, metric: '18', helper: 'Pending invoices' },
+      { key: 'payments', label: 'Payments', icon: ClipboardList, metric: '12', helper: 'Received / due' },
+      { key: 'receivables', label: 'Receivables', icon: Mail, metric: '7', helper: 'Outstanding balances' },
+      { key: 'accounts', label: 'Accounts', icon: Users, metric: '9', helper: 'Account closure' },
+      { key: 'finance-reports', label: 'Finance Reports', icon: FileSpreadsheet, metric: '10', helper: 'Report exports' },
+      { key: 'profit-analysis', label: 'Profit Analysis', icon: TrendingUp, metric: '4', helper: 'Margin insight' },
+      { key: 'margin-analysis', label: 'Margin Analysis', icon: Target, metric: '6', helper: 'Margin review' },
+    ],
+    rows: [
+      { account: 'Pioneer Infra', owner: 'Anika', detail: 'Invoice pending release', status: 'Pending', next: 'Issue invoice', value: '₹42L' },
+      { account: 'Vertex Components', owner: 'Meera', detail: 'Payment received partially', status: 'Part Paid', next: 'Collect balance', value: '₹18L' },
+      { account: 'Apex Rail Systems', owner: 'Rohan', detail: 'Receivable overdue by 4 days', status: 'Issued', next: 'Reminder call', value: '₹27L' },
+      { account: 'Kavya Electricals', owner: 'Kabir', detail: 'Invoice closed and matched', status: 'Cleared', next: 'Update ledger', value: 'Done' },
+    ],
+    activity: [
+      'Invoice queue updated for Pioneer Infra',
+      'Vertex Components payment partially cleared',
+      'Apex Rail Systems receivable reminder logged',
+      'Kavya Electricals ledger update completed',
+    ],
+    priorities: ['Issue pending invoices', 'Collect receivables', 'Review margin analysis', 'Close cleared accounts'],
   },
 };
 
@@ -1438,7 +1680,7 @@ function ModuleWorkspace(props: WorkspaceProps) {
   if (['qualification', 'lead-conversion', 'cost-analysis'].includes(activeModule)) {
     return <ScorecardWorkspace {...props} />;
   }
-  if (['lead-status', 'negotiation-tracking', 'vendor-comparison'].includes(activeModule)) {
+  if (['lead-status', 'negotiation-tracking', 'vendor-comparison', 'approval-queue', 'inventory-dashboard', 'dispatch-dashboard', 'invoice-queue'].includes(activeModule)) {
     return <BoardWorkspace {...props} />;
   }
   if (['follow-ups', 'supplier-communication'].includes(activeModule)) return <FollowUpWorkspace {...props} />;
@@ -1456,7 +1698,18 @@ function ModuleWorkspace(props: WorkspaceProps) {
   ) {
     return <ProcessWorkspace {...props} />;
   }
-  if (['lead-history', 'sales-reports', 'procurement-reports'].includes(activeModule)) return <HistoryWorkspace {...props} />;
+  if (
+    [
+      'lead-history',
+      'sales-reports',
+      'procurement-reports',
+      'approval-history',
+      'inventory-reports',
+      'delivery-reports',
+      'finance-reports',
+    ].includes(activeModule)
+  )
+    return <HistoryWorkspace {...props} />;
   return <OverviewWorkspace {...props} />;
 }
 
@@ -1614,7 +1867,7 @@ export function OperationsDashboardPage({ kind }: { kind: DashboardKind }) {
         }
 
         await operationsApi.updateQuote(kind, row.id, quotePayload);
-      } else if (row.source === 'operation' && (kind === 'sales' || kind === 'procurement')) {
+      } else if (row.source === 'operation' && isRecordTeamKind(kind)) {
         await operationsApi.updateRecord(kind, row.id, {
           status: action === 'Requested' ? 'Requested' : action === 'At Risk' ? 'At Risk' : 'Updated',
           note: `${selectedModule.label}: ${action}`,
@@ -1631,7 +1884,7 @@ export function OperationsDashboardPage({ kind }: { kind: DashboardKind }) {
   };
 
   const handleCreateRecord = async (module: string) => {
-    if (kind !== 'sales' && kind !== 'procurement') {
+    if (!isRecordTeamKind(kind)) {
       toast.error('Create quote requests from the website or Flutter app');
       return;
     }
@@ -1640,7 +1893,7 @@ export function OperationsDashboardPage({ kind }: { kind: DashboardKind }) {
     try {
       await operationsApi.createRecord(kind, {
         module,
-        title: kind === 'procurement' ? 'New Supplier Draft' : 'New Customer Draft',
+        title: kind === 'procurement' ? 'New Supplier Draft' : kind === 'sales' ? 'New Customer Draft' : 'New Operational Draft',
         detail: selectedModule.helper,
         status: 'open',
         nextStep: 'Complete details',
@@ -1675,9 +1928,9 @@ export function OperationsDashboardPage({ kind }: { kind: DashboardKind }) {
         await operationsApi.updateLead(row.id, payload);
       } else if (row.source === 'quote' && row.id && (kind === 'lqt' || kind === 'sales')) {
         await operationsApi.updateQuote(kind, row.id, payload);
-      } else if (row.source === 'operation' && row.id && (kind === 'sales' || kind === 'procurement')) {
+      } else if (row.source === 'operation' && row.id && isRecordTeamKind(kind)) {
         await operationsApi.updateRecord(kind, row.id, payload);
-      } else if (row.source === 'operation' && (kind === 'sales' || kind === 'procurement')) {
+      } else if (row.source === 'operation' && isRecordTeamKind(kind)) {
         await operationsApi.createRecord(kind, payload);
       } else {
         throw new Error('This record cannot be updated from the current dashboard');

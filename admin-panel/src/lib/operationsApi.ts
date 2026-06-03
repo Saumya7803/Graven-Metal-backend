@@ -1,6 +1,6 @@
 import { axiosClient } from './axiosClient';
 
-export type OperationTeam = 'lqt' | 'sales' | 'procurement';
+export type OperationTeam = 'lqt' | 'sales' | 'procurement' | 'cct' | 'inventory' | 'dispatch' | 'finance';
 
 export type OperationRow = {
   id: string;
@@ -82,12 +82,12 @@ export const operationsApi = {
     return res.data;
   },
 
-  async createRecord(team: 'sales' | 'procurement', payload: Record<string, unknown>) {
+  async createRecord(team: 'sales' | 'procurement' | 'cct' | 'inventory' | 'dispatch' | 'finance', payload: Record<string, unknown>) {
     const res = await axiosClient.post(`/operations/${team}/records`, payload);
     return res.data;
   },
 
-  async updateRecord(team: 'sales' | 'procurement', id: string, payload: Record<string, unknown>) {
+  async updateRecord(team: 'sales' | 'procurement' | 'cct' | 'inventory' | 'dispatch' | 'finance', id: string, payload: Record<string, unknown>) {
     const res = await axiosClient.patch(`/operations/${team}/records/${id}`, payload);
     return res.data;
   },

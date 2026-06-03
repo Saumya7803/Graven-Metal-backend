@@ -27,6 +27,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Trash2,
+  Truck,
   UserCog,
   UserPlus,
   Users,
@@ -57,6 +58,7 @@ const allPermissions = [
   'manage_price_requests',
   'compare_vendors',
   'manage_purchase_orders',
+  'manage_product_approvals',
   'view_platform_monitoring',
   'manage_products',
   'manage_categories',
@@ -69,7 +71,16 @@ const allPermissions = [
   'manage_seo',
   'view_analytics',
   'backup_database',
+  'manage_cct',
+  'manage_inventory',
+  'manage_warehouses',
+  'manage_dispatch',
+  'manage_invoices',
+  'manage_payments',
+  'manage_finance',
 ];
+
+const managedRoleOptions = ['lqt', 'sales', 'procurement', 'cct', 'inventory', 'dispatch', 'finance', 'admin', 'editor', 'data_entry', 'developer'] as const;
 
 const ROLE_PERMISSION_PRESETS: Record<string, string[]> = {
   super_admin: [...allPermissions],
@@ -86,6 +97,17 @@ const ROLE_PERMISSION_PRESETS: Record<string, string[]> = {
     'view_analytics',
   ],
   procurement: ['manage_suppliers', 'manage_price_requests', 'compare_vendors', 'manage_purchase_orders', 'view_analytics'],
+  cct: [
+    'manage_rfqs',
+    'manage_quotations',
+    'manage_negotiations',
+    'manage_orders',
+    'manage_product_approvals',
+    'view_analytics',
+  ],
+  inventory: ['manage_products', 'manage_categories', 'manage_inventory', 'manage_warehouses', 'manage_orders', 'view_analytics'],
+  dispatch: ['manage_dispatch', 'manage_orders', 'manage_inventory', 'manage_products', 'view_analytics'],
+  finance: ['manage_invoices', 'manage_payments', 'manage_finance', 'view_analytics'],
   admin: ['manage_products', 'manage_product_approvals', 'manage_categories', 'manage_blogs', 'manage_quotes', 'manage_contacts', 'view_analytics'],
   editor: ['manage_products', 'manage_categories', 'manage_blogs'],
   developer: ['manage_products', 'manage_categories', 'manage_blogs', 'view_platform_monitoring'],
@@ -228,6 +250,71 @@ const blueprintRoles: BlueprintRole[] = [
     access: ['Products', 'Categories', 'Inventory', 'Brands', 'Documents'],
     restrictions: ['No Finance', 'No System Settings', 'No User Management'],
     accent: 'blue',
+  },
+  {
+    title: 'CCT',
+    subtitle: 'Control Room',
+    responsibilities: [
+      'Review commercial approvals and escalation queues',
+      'Check margin impact before pricing sign-off',
+      'Review pricing, RFQs, and target rates',
+      'Coordinate commercial approvals across teams',
+    ],
+    access: ['Approval Queue', 'Margin Review', 'Cost Review', 'Target Price Review', 'Commercial Approvals', 'Pricing Approvals', 'Sourcing Approvals'],
+    restrictions: ['No Inventory Control', 'No Dispatch Control', 'No Finance Control'],
+    accent: 'gold',
+  },
+  {
+    title: 'Inventory',
+    subtitle: 'Stock Control',
+    responsibilities: [
+      'Track warehouse stock and available quantities',
+      'Handle GRNs, transfers, and stock alerts',
+      'Monitor batch movement and inventory reports',
+      'Coordinate warehouse and replenishment tasks',
+    ],
+    access: ['Inventory Dashboard', 'Warehouses', 'Stock', 'GRN', 'Transfers', 'Alerts', 'Batch Tracking', 'Inventory Reports'],
+    restrictions: ['No Commercial Approval', 'No Dispatch Control', 'No Finance Control'],
+    accent: 'blue',
+  },
+  {
+    title: 'Dispatch',
+    subtitle: 'Logistics Team',
+    responsibilities: [
+      'Prepare packaging and shipment readiness',
+      'Assign vehicles and track delivery status',
+      'Upload proof of delivery and shipping updates',
+      'Share delivery reports with sales and finance',
+    ],
+    access: ['Dispatch Dashboard', 'Packaging', 'Vehicle Assignment', 'Tracking', 'POD Upload', 'Delivery Reports', 'Logistics'],
+    restrictions: ['No Inventory Master Control', 'No Finance Approval', 'No User Management'],
+    accent: 'blue',
+  },
+  {
+    title: 'Finance',
+    subtitle: 'Accounts & Collections',
+    responsibilities: [
+      'Manage invoice queues and payment collections',
+      'Track receivables and account status',
+      'Review profitability and margin analysis',
+      'Close finance reports and payment records',
+    ],
+    access: ['Invoice Queue', 'Payments', 'Receivables', 'Accounts', 'Finance Reports', 'Profit Analysis', 'Margin Analysis'],
+    restrictions: ['No Product Master Changes', 'No System Settings', 'No User Management'],
+    accent: 'gold',
+  },
+  {
+    title: 'Data Entry',
+    subtitle: 'Product Input Operator',
+    responsibilities: [
+      'Add new product drafts and keep product data updated',
+      'Request removal of outdated or incorrect products',
+      'Maintain descriptions, images, and master details',
+      'Prepare records for admin approval',
+    ],
+    access: ['Product Drafts', 'Product Images', 'Documents', 'Removal Requests'],
+    restrictions: ['No Direct Publish', 'No Finance', 'No System Settings', 'No User Management'],
+    accent: 'green',
   },
 ];
 
@@ -408,8 +495,13 @@ function getRoleTone(role: string) {
   if (role === 'lqt') return 'border-cyan-400/30 bg-cyan-400/10 text-cyan-200';
   if (role === 'sales') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
   if (role === 'procurement') return 'border-violet-400/30 bg-violet-400/10 text-violet-200';
+  if (role === 'cct') return 'border-amber-400/30 bg-amber-400/10 text-amber-200';
+  if (role === 'inventory') return 'border-sky-400/30 bg-sky-400/10 text-sky-200';
+  if (role === 'dispatch') return 'border-orange-400/30 bg-orange-400/10 text-orange-200';
+  if (role === 'finance') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
   if (role === 'admin') return 'border-sky-400/30 bg-sky-400/10 text-sky-200';
   if (role === 'editor') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
+  if (role === 'data_entry') return 'border-emerald-400/30 bg-emerald-400/10 text-emerald-200';
   if (role === 'developer') return 'border-cyan-400/30 bg-cyan-400/10 text-cyan-200';
   return 'border-zinc-600/60 bg-zinc-800/70 text-zinc-300';
 }
@@ -538,6 +630,7 @@ function buildBlueprintPrintHtml() {
           .role-card { page-break-inside: avoid; }
           .role-gold { box-shadow: inset 0 0 0 1px rgba(214,182,118,0.28); }
           .role-blue { box-shadow: inset 0 0 0 1px rgba(56,189,248,0.2); }
+          .role-green { box-shadow: inset 0 0 0 1px rgba(52,211,153,0.22); }
           .role-header {
             display: flex;
             justify-content: space-between;
@@ -564,6 +657,7 @@ function buildBlueprintPrintHtml() {
             margin-top: 8px;
           }
           .role-blue .dot { background: #38bdf8; }
+          .role-green .dot { background: #34d399; }
           .role-grid {
             display: grid;
             grid-template-columns: 1.05fr 0.95fr;
@@ -666,7 +760,15 @@ function BlueprintDocument({ onExport }: { onExport: () => void }) {
                   <p className="text-[11px] uppercase tracking-[0.22em] text-zinc-500">{role.title}</p>
                   <h4 className="mt-1 text-2xl font-extrabold text-zinc-950">{role.subtitle}</h4>
                 </div>
-                <span className={`mt-1 h-3.5 w-3.5 rounded-full ${role.accent === 'gold' ? 'bg-[#d6b676]' : 'bg-sky-400'}`} />
+                <span
+                  className={`mt-1 h-3.5 w-3.5 rounded-full ${
+                    role.accent === 'gold'
+                      ? 'bg-[#d6b676]'
+                      : role.accent === 'green'
+                        ? 'bg-emerald-400'
+                        : 'bg-sky-400'
+                  }`}
+                />
               </div>
 
               <div className="mt-5 grid gap-5 md:grid-cols-[1fr_0.9fr]">
@@ -883,6 +985,38 @@ export function SuperAdminPage() {
       helper: 'Supplier and sourcing ownership',
       route: '/procurement',
       icon: Package,
+    },
+    {
+      label: 'CCT Control Room',
+      role: 'cct',
+      count: admins.filter((row) => row.role === 'cct').length,
+      helper: 'Commercial approvals and pricing control',
+      route: '/cct',
+      icon: Shield,
+    },
+    {
+      label: 'Inventory Team',
+      role: 'inventory',
+      count: admins.filter((row) => row.role === 'inventory').length,
+      helper: 'Warehouse and stock control',
+      route: '/inventory',
+      icon: Database,
+    },
+    {
+      label: 'Dispatch Team',
+      role: 'dispatch',
+      count: admins.filter((row) => row.role === 'dispatch').length,
+      helper: 'Shipping and delivery operations',
+      route: '/dispatch',
+      icon: Truck,
+    },
+    {
+      label: 'Finance Team',
+      role: 'finance',
+      count: admins.filter((row) => row.role === 'finance').length,
+      helper: 'Invoices, collections, and reporting',
+      route: '/finance',
+      icon: FileText,
     },
   ];
 
@@ -1849,13 +1983,11 @@ export function SuperAdminPage() {
                   <select className={input} value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
                     <option value="all">All roles</option>
                     <option value="super_admin">super_admin</option>
-                    <option value="lqt">lqt</option>
-                    <option value="sales">sales</option>
-                    <option value="procurement">procurement</option>
-                    <option value="admin">admin</option>
-                    <option value="editor">editor</option>
-                    <option value="data_entry">data_entry</option>
-                    <option value="developer">developer</option>
+                    {managedRoleOptions.map((roleOption) => (
+                      <option key={roleOption} value={roleOption}>
+                        {roleOption}
+                      </option>
+                    ))}
                     <option value="user">user</option>
                   </select>
                 </div>
@@ -1902,13 +2034,11 @@ export function SuperAdminPage() {
                                 }
                               >
                                 <option value="user">user</option>
-                                <option value="lqt">lqt</option>
-                                <option value="sales">sales</option>
-                                <option value="procurement">procurement</option>
-                                <option value="editor">editor</option>
-                                <option value="data_entry">data_entry</option>
-                                <option value="admin">admin</option>
-                                <option value="developer">developer</option>
+                                {managedRoleOptions.map((roleOption) => (
+                                  <option key={roleOption} value={roleOption}>
+                                    {roleOption}
+                                  </option>
+                                ))}
                               </select>
                             )}
                           </td>
@@ -2378,13 +2508,11 @@ export function SuperAdminPage() {
                   }))
                 }
               >
-                <option value="lqt">lqt</option>
-                <option value="sales">sales</option>
-                <option value="procurement">procurement</option>
-                <option value="admin">admin</option>
-                <option value="editor">editor</option>
-                <option value="data_entry">data_entry</option>
-                <option value="developer">developer</option>
+                {managedRoleOptions.map((roleOption) => (
+                  <option key={roleOption} value={roleOption}>
+                    {roleOption}
+                  </option>
+                ))}
               </select>
             </label>
           </div>

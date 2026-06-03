@@ -33,6 +33,24 @@ const procurementModules = new Set([
   'supplier-communication',
 ]);
 
+const recordTeams = new Set(['procurement', 'cct', 'inventory', 'dispatch', 'finance']);
+const recordModulesByTeam = {
+  procurement: procurementModules,
+  cct: new Set([
+    'approval-queue',
+    'margin-review',
+    'cost-review',
+    'target-price-review',
+    'commercial-approval',
+    'pricing-approval',
+    'sourcing-approval',
+    'approval-history',
+  ]),
+  inventory: new Set(['inventory-dashboard', 'warehouses', 'stock', 'grn', 'transfers', 'alerts', 'batch-tracking', 'inventory-reports']),
+  dispatch: new Set(['dispatch-dashboard', 'packaging', 'vehicle-assignment', 'tracking', 'pod-upload', 'delivery-reports', 'logistics']),
+  finance: new Set(['invoice-queue', 'payments', 'receivables', 'accounts', 'finance-reports', 'profit-analysis', 'margin-analysis']),
+};
+
 function assertTeamAccess(req, team) {
   if (req.user.role === 'super_admin') return null;
   if (req.user.role !== team) return 'Forbidden: team dashboard access denied';
@@ -177,18 +195,18 @@ export const getOperationsDashboard = asyncHandler(async (req, res) => {
   const { team } = req.params;
   const accessError = assertTeamAccess(req, team);
   if (accessError) return res.status(403).json({ message: accessError });
-  if (!['lqt', 'sales', 'procurement'].includes(team)) return res.status(400).json({ message: 'Invalid team' });
+  if (!['lqt', 'sales', 'procurement', 'cct', 'inventory', 'dispatch', 'finance'].includes(team)) {
+    return res.status(400).json({ message: 'Invalid team' });
+  }
 
-  if (team === 'procurement') {
+  if (recordTeams.has(team)) {
     const records = await OperationRecord.find({ team }).sort({ updatedAt: -1 }).limit(200);
     const rows = records.map(formatRecord);
     return res.json({
       team,
       rows,
       counts: statusCounts(rows),
-      modules: Object.fromEntries(
-        [...procurementModules].map((module) => [module, rows.filter((row) => row.module === module).length])
-      ),
+      modules: Object.fromEntries([...((recordModulesByTeam[team] || procurementModules))].map((module) => [module, rows.filter((row) => row.module === module).length])),
     });
   }
 
@@ -343,7 +361,8 @@ export const createOperationRecord = asyncHandler(async (req, res) => {
   const { team } = req.params;
   const accessError = assertTeamAccess(req, team);
   if (accessError) return res.status(403).json({ message: accessError });
-  if (!procurementModules.has(req.body.module) && !['customer-management', 'sales-reports'].includes(req.body.module)) {
+  const allowedModules = recordModulesByTeam[team] || procurementModules;
+  if (!allowedModules.has(req.body.module) && !['customer-management', 'sales-reports'].includes(req.body.module)) {
     return res.status(400).json({ message: 'Invalid operation module' });
   }
 

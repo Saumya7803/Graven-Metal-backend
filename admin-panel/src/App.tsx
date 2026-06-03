@@ -88,6 +88,38 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: '/cct',
+    element: withSuspense(
+      <ProtectedRoute allowedRoles={['cct', 'super_admin']}>
+        <OperationsDashboardPage kind="cct" />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/inventory',
+    element: withSuspense(
+      <ProtectedRoute allowedRoles={['inventory', 'super_admin']}>
+        <OperationsDashboardPage kind="inventory" />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/dispatch',
+    element: withSuspense(
+      <ProtectedRoute allowedRoles={['dispatch', 'super_admin']}>
+        <OperationsDashboardPage kind="dispatch" />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/finance',
+    element: withSuspense(
+      <ProtectedRoute allowedRoles={['finance', 'super_admin']}>
+        <OperationsDashboardPage kind="finance" />
+      </ProtectedRoute>
+    ),
+  },
+  {
     path: '/super-admin',
     element: withSuspense(
       <ProtectedRoute allowedRoles={['super_admin']}>

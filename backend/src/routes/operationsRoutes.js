@@ -19,7 +19,7 @@ import { authorize, protect } from '../middlewares/authMiddleware.js';
 import { validate } from '../middlewares/validateMiddleware.js';
 
 const router = Router();
-const teamRoles = ['super_admin', 'lqt', 'sales', 'procurement'];
+const teamRoles = ['super_admin', 'lqt', 'sales', 'procurement', 'cct', 'inventory', 'dispatch', 'finance'];
 const quoteModules = [
   'overview',
   'new-leads',
@@ -36,6 +36,48 @@ const quoteModules = [
   'negotiation-tracking',
   'order-management',
   'lead-conversion',
+];
+const recordModules = [
+  'supplier-management',
+  'price-requests',
+  'vendor-comparison',
+  'cost-analysis',
+  'purchase-orders',
+  'availability-tracking',
+  'procurement-reports',
+  'supplier-communication',
+  'customer-management',
+  'sales-reports',
+  'approval-queue',
+  'margin-review',
+  'cost-review',
+  'target-price-review',
+  'commercial-approval',
+  'pricing-approval',
+  'sourcing-approval',
+  'approval-history',
+  'inventory-dashboard',
+  'warehouses',
+  'stock',
+  'grn',
+  'transfers',
+  'alerts',
+  'batch-tracking',
+  'inventory-reports',
+  'dispatch-dashboard',
+  'packaging',
+  'vehicle-assignment',
+  'tracking',
+  'pod-upload',
+  'delivery-reports',
+  'logistics',
+  'invoice-queue',
+  'payments',
+  'receivables',
+  'accounts',
+  'finance-reports',
+  'profit-analysis',
+  'margin-analysis',
 ];
 
 router.use(protect, authorize(...teamRoles));
@@ -76,13 +118,13 @@ router.patch(
   updateLqtLeadRecord
 );
 
-router.get('/:team/dashboard', [param('team').isIn(['lqt', 'sales', 'procurement'])], validate, getOperationsDashboard);
-router.get('/:team/members', [param('team').isIn(['lqt', 'sales', 'procurement'])], validate, listOperationMembers);
-router.get('/:team/records', [param('team').isIn(['sales', 'procurement'])], validate, listOperationRecords);
+router.get('/:team/dashboard', [param('team').isIn(['lqt', 'sales', 'procurement', 'cct', 'inventory', 'dispatch', 'finance'])], validate, getOperationsDashboard);
+router.get('/:team/members', [param('team').isIn(['lqt', 'sales', 'procurement', 'cct', 'inventory', 'dispatch', 'finance'])], validate, listOperationMembers);
+router.get('/:team/records', [param('team').isIn(['sales', 'procurement', 'cct', 'inventory', 'dispatch', 'finance'])], validate, listOperationRecords);
 router.post(
   '/:team/records',
   [
-    param('team').isIn(['sales', 'procurement']),
+    param('team').isIn(['sales', 'procurement', 'cct', 'inventory', 'dispatch', 'finance']),
     body('module').isString().notEmpty(),
     body('title').trim().notEmpty().isLength({ max: 180 }),
     body('owner').optional().isString().isLength({ max: 120 }),
@@ -99,7 +141,7 @@ router.post(
 router.patch(
   '/:team/records/:id',
   [
-    param('team').isIn(['sales', 'procurement']),
+    param('team').isIn(['sales', 'procurement', 'cct', 'inventory', 'dispatch', 'finance']),
     param('id').isMongoId(),
     body('title').optional().trim().notEmpty().isLength({ max: 180 }),
     body('owner').optional().trim().isLength({ max: 120 }),
