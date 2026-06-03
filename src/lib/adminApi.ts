@@ -37,6 +37,9 @@ type ProductPayload = {
   price: number;
   currency?: string;
   unit?: string;
+  unitType?: string;
+  weightPerUnit?: number;
+  moq?: number;
   stockQty?: number;
   file?: File | null;
 };
@@ -110,8 +113,11 @@ export const adminApi = {
     appendDefined(fd, 'description', payload.description || '');
     appendDefined(fd, 'category', payload.category);
     appendDefined(fd, 'price', payload.price);
-    appendDefined(fd, 'currency', payload.currency || 'USD');
+    appendDefined(fd, 'currency', payload.currency || 'INR');
     appendDefined(fd, 'unit', payload.unit || 'kg');
+    appendDefined(fd, 'unitType', payload.unitType || payload.unit || 'kg');
+    appendDefined(fd, 'weightPerUnit', payload.weightPerUnit ?? 1);
+    appendDefined(fd, 'moq', payload.moq ?? 1);
     appendDefined(fd, 'stockQty', payload.stockQty ?? 0);
     if (payload.file) fd.append('image', payload.file);
     const res = await axiosClient.post('/products', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -126,6 +132,9 @@ export const adminApi = {
     appendDefined(fd, 'price', payload.price);
     appendDefined(fd, 'currency', payload.currency);
     appendDefined(fd, 'unit', payload.unit);
+    appendDefined(fd, 'unitType', payload.unitType);
+    appendDefined(fd, 'weightPerUnit', payload.weightPerUnit);
+    appendDefined(fd, 'moq', payload.moq);
     appendDefined(fd, 'stockQty', payload.stockQty);
     if (payload.file) fd.append('image', payload.file);
     const res = await axiosClient.put(`/products/${id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });

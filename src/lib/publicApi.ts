@@ -9,6 +9,10 @@ export type ApiProduct = {
   price: number;
   currency?: string;
   unit?: string;
+  unitType?: string;
+  weightPerUnit?: number;
+  moq?: number;
+  unitPrice?: number;
   stockQty?: number;
   inStock?: boolean;
   image?: { url?: string; publicId?: string };

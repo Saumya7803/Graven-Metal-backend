@@ -88,6 +88,9 @@ type ProductForm = {
   price: number;
   currency: string;
   unit: string;
+  unitType: string;
+  weightPerUnit: number;
+  moq: number;
   stockQty: number;
   file: File | null;
 };
@@ -150,8 +153,11 @@ const defaultProductForm: ProductForm = {
   description: '',
   category: '',
   price: 0,
-  currency: 'USD',
+  currency: 'INR',
   unit: 'kg',
+  unitType: 'Rod',
+  weightPerUnit: 1,
+  moq: 1,
   stockQty: 0,
   file: null,
 };
@@ -236,6 +242,24 @@ function formatDateTime(value?: string) {
     hour: '2-digit',
     minute: '2-digit',
   }).format(date);
+}
+
+function formatCurrency(currency: string, value: number) {
+  const normalized = currency.toUpperCase();
+  const locale = normalized === 'INR' ? 'en-IN' : 'en-US';
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: normalized,
+    maximumFractionDigits: value % 1 === 0 ? 0 : 2,
+  }).format(value);
+}
+
+function getUnitType(product: Pick<ApiProduct, 'unitType' | 'unit'>) {
+  return product.unitType || product.unit || 'unit';
+}
+
+function getUnitPrice(product: Pick<ApiProduct, 'price' | 'weightPerUnit'>) {
+  return (product.price || 0) * (product.weightPerUnit || 1);
 }
 
 function sectionTitle(section: Section) {
@@ -602,7 +626,7 @@ export function AdminPage() {
   }, [quotes, contacts]);
 
   const topProducts = useMemo(() => {
-    return [...products].sort((a, b) => b.price - a.price).slice(0, 6);
+    return [...products].sort((a, b) => getUnitPrice(b) - getUnitPrice(a)).slice(0, 6);
   }, [products]);
 
   const recentInquiries = useMemo(() => {
@@ -776,8 +800,11 @@ export function AdminPage() {
       description: item.description || '',
       category: typeof item.category === 'string' ? item.category : item.category?._id || '',
       price: item.price,
-      currency: item.currency || 'USD',
+      currency: item.currency || 'INR',
       unit: item.unit || 'kg',
+      unitType: item.unitType || item.unit || 'kg',
+      weightPerUnit: item.weightPerUnit || 1,
+      moq: item.moq || 1,
       stockQty: item.stockQty || 0,
       file: null,
     });
@@ -899,6 +926,9 @@ export function AdminPage() {
       const iDescription = index('description');
       const iCurrency = index('currency');
       const iUnit = index('unit');
+      const iUnitType = index('unittype');
+      const iWeightPerUnit = index('weightperunit');
+      const iMoq = index('moq');
 
       if (iName < 0 || iSlug < 0 || iPrice < 0) {
         throw new Error('CSV headers must include: name, slug, price');
@@ -917,8 +947,11 @@ export function AdminPage() {
           description: iDescription >= 0 ? columns[iDescription] || '' : '',
           category: categoryId,
           price: Number(columns[iPrice] || 0),
-          currency: iCurrency >= 0 ? columns[iCurrency] || 'USD' : 'USD',
+          currency: iCurrency >= 0 ? columns[iCurrency] || 'INR' : 'INR',
           unit: iUnit >= 0 ? columns[iUnit] || 'kg' : 'kg',
+          unitType: iUnitType >= 0 ? columns[iUnitType] || columns[iUnit] || 'kg' : columns[iUnit] || 'kg',
+          weightPerUnit: iWeightPerUnit >= 0 ? Number(columns[iWeightPerUnit] || 1) : 1,
+          moq: iMoq >= 0 ? Number(columns[iMoq] || 1) : 1,
           stockQty: iStock >= 0 ? Number(columns[iStock] || 0) : 0,
           file: null,
         };
@@ -1414,7 +1447,7 @@ export function AdminPage() {
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-semibold text-gold">
-                              {item.currency || 'USD'} {item.price}
+                              {formatCurrency(item.currency || 'INR', getUnitPrice(item))} / {getUnitType(item)}
                             </p>
                             <p className="text-xs text-zinc-500">Stock {item.stockQty || 0}</p>
                           </div>
@@ -1544,7 +1577,7 @@ export function AdminPage() {
                     <tr>
                       <th className="px-3 py-3">Product</th>
                       <th className="px-3 py-3">Category</th>
-                      <th className="px-3 py-3">Price</th>
+                      <th className="px-3 py-3">Unit Price</th>
                       <th className="px-3 py-3">Stock</th>
                       <th className="px-3 py-3">Status</th>
                       <th className="px-3 py-3">Actions</th>
@@ -1561,7 +1594,7 @@ export function AdminPage() {
                           {typeof item.category === 'string' ? item.category : item.category?.name || '-'}
                         </td>
                         <td className="px-3 py-3 text-zinc-100">
-                          {item.currency || 'USD'} {item.price}/{item.unit || 'kg'}
+                          {formatCurrency(item.currency || 'INR', getUnitPrice(item))} / {getUnitType(item)}
                         </td>
                         <td className="px-3 py-3 text-zinc-300">{item.stockQty || 0}</td>
                         <td className="px-3 py-3">
@@ -1624,7 +1657,7 @@ export function AdminPage() {
                   <p className="text-sm font-semibold text-zinc-100">Bulk Upload Support (CSV)</p>
                 </div>
                 <p className="mt-1 text-xs text-zinc-500">
-                  Headers: `name,slug,price,stockQty,category,description,currency,unit`
+                  Headers: `name,slug,price,stockQty,category,description,currency,unit,unitType,weightPerUnit,moq`
                 </p>
                 <div className="mt-3 grid gap-2 md:grid-cols-[1fr_1fr_auto]">
                   <input
@@ -2517,7 +2550,7 @@ export function AdminPage() {
               </select>
             </label>
             <label className="space-y-1">
-              <span className={labelClass}>Price</span>
+              <span className={labelClass}>Price Per Kg</span>
               <input
                 className={inputClass}
                 type="number"
@@ -2527,6 +2560,10 @@ export function AdminPage() {
                 onChange={(e) => setProductForm((s) => ({ ...s, price: Number(e.target.value) }))}
                 required
               />
+              <p className="mt-1 text-xs text-zinc-500">
+                Unit price: {formatCurrency(productForm.currency || 'INR', productForm.price * (productForm.weightPerUnit || 1))} /{' '}
+                {productForm.unitType || productForm.unit || 'unit'}
+              </p>
             </label>
             <label className="space-y-1">
               <span className={labelClass}>Currency</span>
@@ -2537,11 +2574,32 @@ export function AdminPage() {
               />
             </label>
             <label className="space-y-1">
-              <span className={labelClass}>Unit</span>
+              <span className={labelClass}>Unit Type</span>
               <input
                 className={inputClass}
-                value={productForm.unit}
-                onChange={(e) => setProductForm((s) => ({ ...s, unit: e.target.value }))}
+                value={productForm.unitType}
+                onChange={(e) => setProductForm((s) => ({ ...s, unitType: e.target.value, unit: e.target.value }))}
+              />
+            </label>
+            <label className="space-y-1">
+              <span className={labelClass}>Weight Per Unit</span>
+              <input
+                className={inputClass}
+                type="number"
+                min={0.01}
+                step="0.01"
+                value={productForm.weightPerUnit}
+                onChange={(e) => setProductForm((s) => ({ ...s, weightPerUnit: Number(e.target.value) }))}
+              />
+            </label>
+            <label className="space-y-1">
+              <span className={labelClass}>MOQ</span>
+              <input
+                className={inputClass}
+                type="number"
+                min={1}
+                value={productForm.moq}
+                onChange={(e) => setProductForm((s) => ({ ...s, moq: Number(e.target.value) }))}
               />
             </label>
             <label className="space-y-1">
