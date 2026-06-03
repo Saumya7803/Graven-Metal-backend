@@ -10,6 +10,13 @@ type LeadForm = Omit<WebsiteLeadPayload, 'quantity'> & {
 
 type LeadErrors = Partial<Record<keyof LeadForm, string>>;
 
+type WebsiteLeadFormProps = {
+  initialProduct?: string;
+  initialQuantity?: number;
+  initialUnit?: string;
+  initialRequirement?: string;
+};
+
 const industryTypes = ['Manufacturing', 'Fabrication', 'Automobile', 'Electrical', 'Construction', 'Export', 'Other'];
 const productCategories = [
   'Copper Cathodes',
@@ -21,35 +28,37 @@ const productCategories = [
 ];
 const timelines = ['Immediate', 'Within 7 Days', 'Within 30 Days', 'Future Requirement'];
 
-const initialForm: LeadForm = {
-  fullName: '',
-  companyName: '',
-  designation: '',
-  phone: '',
-  email: '',
-  whatsappNumber: '',
-  industryType: '',
-  companyLocation: '',
-  city: '',
-  state: '',
-  country: '',
-  gstNumber: '',
-  product: '',
-  quantity: '',
-  unit: 'MT',
-  deliveryLocation: '',
-  requirement: '',
-  purchaseTimeline: '',
-  preferredContactMethod: 'Phone',
-  file: null,
-};
+function createInitialForm(props: WebsiteLeadFormProps = {}): LeadForm {
+  return {
+    fullName: '',
+    companyName: '',
+    designation: '',
+    phone: '',
+    email: '',
+    whatsappNumber: '',
+    industryType: '',
+    companyLocation: '',
+    city: '',
+    state: '',
+    country: '',
+    gstNumber: '',
+    product: props.initialProduct || '',
+    quantity: props.initialQuantity != null ? String(props.initialQuantity) : '',
+    unit: props.initialUnit || 'MT',
+    deliveryLocation: '',
+    requirement: props.initialRequirement || '',
+    purchaseTimeline: '',
+    preferredContactMethod: 'Phone',
+    file: null,
+  };
+}
 
 function FieldError({ message }: { message?: string }) {
   return message ? <p className="mt-1 text-xs text-red-300">{message}</p> : null;
 }
 
-export function WebsiteLeadForm() {
-  const [form, setForm] = useState<LeadForm>(initialForm);
+export function WebsiteLeadForm(props: WebsiteLeadFormProps) {
+  const [form, setForm] = useState<LeadForm>(() => createInitialForm(props));
   const [errors, setErrors] = useState<LeadErrors>({});
   const [serverError, setServerError] = useState('');
   const [success, setSuccess] = useState<{ leadId: string } | null>(null);
@@ -93,7 +102,7 @@ export function WebsiteLeadForm() {
         quantity: Number(form.quantity),
       });
       setSuccess({ leadId: lead.leadId });
-      setForm(initialForm);
+      setForm(createInitialForm(props));
       toast.success('Inquiry submitted successfully');
     } catch (error) {
       const message = getApiErrorMessage(error);
@@ -106,6 +115,12 @@ export function WebsiteLeadForm() {
 
   const fieldClass = 'gm-input mt-1.5';
   const labelClass = 'text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400';
+  const productOptions = form.product && !productCategories.includes(form.product)
+    ? [form.product, ...productCategories]
+    : productCategories;
+  const unitOptions = form.unit && !['Kg', 'MT', 'Ton'].includes(form.unit)
+    ? [form.unit, 'Kg', 'MT', 'Ton']
+    : ['Kg', 'MT', 'Ton'];
 
   return (
     <section id="industrial-inquiry" className="scroll-mt-24 border-y border-gold/15 bg-[#050b11] px-4 py-12 sm:px-6 lg:px-10">
@@ -242,7 +257,7 @@ export function WebsiteLeadForm() {
                     <span className={labelClass}>Product Category *</span>
                     <select className={fieldClass} value={form.product} onChange={(e) => update('product', e.target.value)}>
                       <option value="">Select product</option>
-                      {productCategories.map((item) => <option key={item}>{item}</option>)}
+                      {productOptions.map((item) => <option key={item}>{item}</option>)}
                     </select>
                     <FieldError message={errors.product} />
                   </label>
@@ -254,7 +269,7 @@ export function WebsiteLeadForm() {
                   <label>
                     <span className={labelClass}>Unit *</span>
                     <select className={fieldClass} value={form.unit} onChange={(e) => update('unit', e.target.value)}>
-                      {['Kg', 'MT', 'Ton'].map((item) => <option key={item}>{item}</option>)}
+                      {unitOptions.map((item) => <option key={item}>{item}</option>)}
                     </select>
                   </label>
                   <label className="sm:col-span-2">

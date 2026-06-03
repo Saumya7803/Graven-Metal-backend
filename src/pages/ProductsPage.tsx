@@ -9,13 +9,14 @@ import { publicApi } from '../lib/publicApi';
 import type { ApiProduct } from '../lib/publicApi';
 
 function formatProductPrice(product: ApiProduct) {
-  const currency = (product.currency || 'USD').toUpperCase();
-  const formatted = new Intl.NumberFormat(undefined, {
+  const currency = (product.currency || 'INR').toUpperCase();
+  const locale = currency === 'INR' ? 'en-IN' : 'en-US';
+  const formatted = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
-    maximumFractionDigits: product.price % 1 === 0 ? 0 : 2,
-  }).format(product.price);
-  return `${formatted} / ${product.unit || 'kg'}`;
+    maximumFractionDigits: (product.unitPrice || product.price) % 1 === 0 ? 0 : 2,
+  }).format(product.unitPrice || product.price);
+  return `${formatted} / ${product.unitType || product.unit || 'unit'}`;
 }
 
 export function ProductsPage() {
