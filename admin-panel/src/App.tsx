@@ -50,7 +50,7 @@ const router = createBrowserRouter([
   {
     path: '/admin',
     element: withSuspense(
-      <ProtectedRoute allowedRoles={['admin', 'editor', 'developer', 'super_admin']}>
+      <ProtectedRoute allowedRoles={['admin', 'editor', 'super_admin']}>
         <AdminPage />
       </ProtectedRoute>
     ),
