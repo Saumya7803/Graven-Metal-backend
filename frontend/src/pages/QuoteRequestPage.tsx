@@ -1,15 +1,9 @@
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
-<<<<<<< HEAD
-import { Link } from 'react-router-dom';
-=======
 import { Link, useLocation } from 'react-router-dom';
->>>>>>> frontend-live/main
 import { MotionReveal } from '../components/MotionReveal';
 import { WebsiteLeadForm } from '../components/leads/WebsiteLeadForm';
 import { SEO } from '../components/seo/SEO';
 
-<<<<<<< HEAD
-=======
 type QuoteRequestState = {
   productName?: string;
   quantity?: number;
@@ -19,8 +13,6 @@ type QuoteRequestState = {
   currency?: string;
   requirement?: string;
 };
-
->>>>>>> frontend-live/main
 const steps = [
   { role: 'ADMIN', step: 'Uploads Products' },
   { role: 'BUYER', step: 'Requests Quote' },
@@ -44,9 +36,6 @@ const nqtSteps = [
   'Delivery',
 ] as const;
 
-<<<<<<< HEAD
-export function QuoteRequestPage() {
-=======
 function formatMoney(currency: string | undefined, value: number) {
   void currency;
   const normalized = 'USD';
@@ -67,8 +56,6 @@ export function QuoteRequestPage() {
   const unitPrice = state?.unitPrice || 0;
   const totalPrice = state?.totalPrice || (quantity && unitPrice ? quantity * unitPrice : 0);
   const currency = 'USD';
-
->>>>>>> frontend-live/main
   return (
     <MotionReveal>
       <SEO
@@ -89,8 +76,6 @@ export function QuoteRequestPage() {
               Tell us what you need and GRAVEN METAL will route your inquiry to the LQT team for qualification,
               pricing support, and sales follow-up.
             </p>
-<<<<<<< HEAD
-=======
             {productName ? (
               <div className="mt-6 max-w-2xl rounded-2xl border border-gold/20 bg-black/25 p-4 shadow-halo">
                 <p className="text-[11px] uppercase tracking-[0.24em] text-gold">Selected from product page</p>
@@ -113,7 +98,6 @@ export function QuoteRequestPage() {
                 {state?.requirement ? <p className="mt-3 text-sm leading-6 text-zinc-300">{state.requirement}</p> : null}
               </div>
             ) : null}
->>>>>>> frontend-live/main
             <div className="mt-7 flex flex-wrap gap-3">
               <a
                 href="#lead-capture-form"
@@ -182,16 +166,12 @@ export function QuoteRequestPage() {
         </div>
       </section>
 
-<<<<<<< HEAD
-      <WebsiteLeadForm />
-=======
       <WebsiteLeadForm
         initialProduct={productName || undefined}
         initialQuantity={quantity || undefined}
         initialUnit={unitLabel}
         initialRequirement={state?.requirement}
       />
->>>>>>> frontend-live/main
     </MotionReveal>
   );
 }
