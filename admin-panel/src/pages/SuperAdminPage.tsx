@@ -18,6 +18,7 @@ import {
   Menu,
   Package,
   Plus,
+  Printer,
   RefreshCw,
   Save,
   Search,
@@ -69,6 +70,7 @@ const allPermissions = [
 
 const tabs = [
   { key: 'analytics', label: 'Dashboard Overview', icon: BarChart3 },
+  { key: 'blueprint', label: 'Business Blueprint', icon: FileText },
   { key: 'admins', label: 'Role & Permissions', icon: ShieldCheck },
   { key: 'users', label: 'User Management', icon: Users },
   { key: 'customers', label: 'Customers', icon: UserCog },
@@ -150,6 +152,58 @@ type AuditLogRow = {
 };
 
 type Tone = 'gold' | 'green' | 'blue' | 'red';
+
+type BlueprintRole = {
+  title: string;
+  subtitle: string;
+  responsibilities: string[];
+  access: string[];
+  restrictions: string[];
+  accent: Tone;
+};
+
+const workflowStages = ['Lead Qualification', 'Sales', 'Procurement', 'Dispatch', 'Finance'];
+
+const businessFlowStages = [
+  'Customer Inquiry',
+  'LQT Team',
+  'Sales Team',
+  'Procurement Team',
+  'Inventory',
+  'Dispatch',
+  'Invoice',
+  'Payment Collection',
+];
+
+const blueprintRoles: BlueprintRole[] = [
+  {
+    title: 'Super Admin',
+    subtitle: 'Full Access',
+    responsibilities: [
+      'Manage all users and roles',
+      'Control system settings and permissions',
+      'Monitor dashboards and business health',
+      'Review escalations and audit logs',
+      'Track profit analytics and reports',
+    ],
+    access: ['Dashboard', 'Messages', 'Escalations', 'CCT Control Room', 'Sales', 'Procurement', 'Inventory', 'Products', 'Dispatch', 'Suppliers', 'RFQs', 'Finance', 'Analytics', 'Settings'],
+    restrictions: ['No functional restrictions'],
+    accent: 'gold',
+  },
+  {
+    title: 'Admin',
+    subtitle: 'Product Master Admin',
+    responsibilities: [
+      'Add, edit, and delete products',
+      'Manage categories and product specifications',
+      'Maintain inventory masters',
+      'Handle warehouse assignment modules',
+    ],
+    access: ['Products', 'Categories', 'Inventory', 'Brands', 'Documents'],
+    restrictions: ['No Finance', 'No System Settings', 'No User Management'],
+    accent: 'blue',
+  },
+];
 
 function ModalShell({
   title,
@@ -338,6 +392,293 @@ function matchesUser(row: UserRow, query: string) {
   if (!search) return true;
   return [row.name, row.email, row.role, ...(row.permissions || [])].some((value) =>
     String(value).toLowerCase().includes(search)
+  );
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function buildBlueprintPrintHtml() {
+  const workflow = workflowStages.map((stage) => `<span class="chip">${escapeHtml(stage)}</span>`).join('');
+  const flow = businessFlowStages.map((stage) => `<span class="step">${escapeHtml(stage)}</span>`).join('');
+  const roleCards = blueprintRoles
+    .map((role) => {
+      const responsibilities = role.responsibilities.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
+      const access = role.access.map((item) => `<span class="mini-chip">${escapeHtml(item)}</span>`).join('');
+      const restrictions = role.restrictions.map((item) => `<span class="restriction">${escapeHtml(item)}</span>`).join('');
+      return `
+        <section class="role-card role-${role.accent}">
+          <div class="role-header">
+            <div>
+              <p class="eyebrow">${escapeHtml(role.title)}</p>
+              <h2>${escapeHtml(role.subtitle)}</h2>
+            </div>
+            <div class="dot"></div>
+          </div>
+          <div class="role-grid">
+            <div>
+              <h3>Responsibilities</h3>
+              <ul>${responsibilities}</ul>
+            </div>
+            <div>
+              <h3>Access</h3>
+              <div class="chip-wrap">${access}</div>
+              <h3>Restrictions</h3>
+              <div class="chip-wrap">${restrictions}</div>
+            </div>
+          </div>
+        </section>
+      `;
+    })
+    .join('');
+
+  return `
+    <html>
+      <head>
+        <title>Graven ERP - Real Business Blueprint</title>
+        <style>
+          @page { size: A4; margin: 18mm; }
+          * { box-sizing: border-box; }
+          body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #111;
+            background: #fff;
+          }
+          .page {
+            width: 100%;
+            max-width: 820px;
+            margin: 0 auto;
+          }
+          .title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 800;
+            margin: 14px 0 26px;
+          }
+          .workflow-title {
+            font-size: 24px;
+            line-height: 1.25;
+            font-weight: 800;
+            margin: 0 0 18px;
+          }
+          .subhead {
+            margin: 28px 0 10px;
+            font-size: 18px;
+            font-weight: 700;
+          }
+          .lead {
+            font-size: 16px;
+            line-height: 1.45;
+            margin: 0;
+          }
+          .chip-row, .flow-row, .chip-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+          }
+          .chip, .step, .mini-chip, .restriction {
+            border: 1px solid #d6b676;
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1;
+          }
+          .chip, .mini-chip { background: #fff8eb; }
+          .step { background: #f7f7f7; }
+          .restriction {
+            border-color: #9a3412;
+            background: #fff1ee;
+          }
+          .workflow-card, .role-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 18px;
+            margin-top: 16px;
+            background: #fff;
+          }
+          .role-card { page-break-inside: avoid; }
+          .role-gold { box-shadow: inset 0 0 0 1px rgba(214,182,118,0.28); }
+          .role-blue { box-shadow: inset 0 0 0 1px rgba(56,189,248,0.2); }
+          .role-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 12px;
+            margin-bottom: 14px;
+          }
+          .role-header h2 {
+            margin: 3px 0 0;
+            font-size: 22px;
+          }
+          .eyebrow {
+            margin: 0;
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #6b7280;
+          }
+          .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 999px;
+            background: #d6b676;
+            margin-top: 8px;
+          }
+          .role-blue .dot { background: #38bdf8; }
+          .role-grid {
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 18px;
+          }
+          h3 {
+            margin: 0 0 8px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+          }
+          ul {
+            margin: 0;
+            padding-left: 18px;
+          }
+          li {
+            margin: 0 0 8px;
+            line-height: 1.45;
+          }
+          .fine-print {
+            margin-top: 18px;
+            font-size: 12px;
+            color: #6b7280;
+            text-align: center;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="page">
+          <div class="title">Graven ERP - Real Business Blueprint</div>
+          <div class="workflow-title">Lead Qualification &rarr; Sales &rarr; Procurement &rarr; Dispatch &rarr; Finance Workflow</div>
+          <div class="subhead">Business Flow:</div>
+          <p class="lead">Customer Inquiry &rarr; LQT Team &rarr; Sales Team &rarr; Procurement Team &rarr; Inventory &rarr; Dispatch &rarr; Invoice &rarr; Payment Collection</p>
+          <div class="workflow-card">
+            <div class="chip-row">${workflow}</div>
+          </div>
+          <div class="subhead">Role Responsibilities and Access</div>
+          ${roleCards}
+          <div class="workflow-card">
+            <div class="subhead" style="margin-top:0;">Operational Handoff</div>
+            <div class="flow-row">${flow}</div>
+          </div>
+          <div class="fine-print">Prepared for internal business process alignment, role planning, and PDF sharing.</div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+function BlueprintDocument({ onExport }: { onExport: () => void }) {
+  return (
+    <section className="mx-auto max-w-[1100px] rounded-[2rem] border border-gold/15 bg-[#f4efe6] p-4 shadow-halo md:p-6">
+      <div className="rounded-[1.5rem] border border-black/10 bg-white px-5 py-6 text-black md:px-8 md:py-10">
+        <div className="flex flex-col gap-4 border-b border-black/10 pb-6 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.28em] text-zinc-500">Graven ERP</p>
+            <h2 className="mt-2 text-3xl font-extrabold md:text-4xl">Real Business Blueprint</h2>
+            <p className="mt-4 max-w-3xl text-base leading-7 text-zinc-700">
+              A clean internal reference for how customer inquiries move through qualification, sales, procurement,
+              dispatch, and finance. Designed to be printed or exported as a PDF.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onExport}
+            className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#111827] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black"
+          >
+            <Printer size={16} />
+            Export PDF
+          </button>
+        </div>
+
+        <div className="mt-7">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">Workflow</p>
+          <h3 className="mt-2 text-[clamp(1.45rem,3vw,2.4rem)] font-extrabold leading-tight text-zinc-950">
+            Lead Qualification &rarr; Sales &rarr; Procurement &rarr; Dispatch &rarr; Finance
+          </h3>
+        </div>
+
+        <div className="mt-8 rounded-3xl border border-zinc-200 bg-[#faf8f2] p-5 md:p-6">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-500">Business Flow</p>
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm font-semibold text-zinc-800">
+            {businessFlowStages.map((stage, index) => (
+              <div key={stage} className="flex items-center gap-3">
+                <span className="rounded-full border border-zinc-300 bg-white px-4 py-2 shadow-sm">{stage}</span>
+                {index < businessFlowStages.length - 1 ? <ArrowRight size={16} className="text-zinc-400" /> : null}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-8 grid gap-4 lg:grid-cols-2">
+          {blueprintRoles.map((role) => (
+            <article
+              key={role.title}
+              className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-zinc-500">{role.title}</p>
+                  <h4 className="mt-1 text-2xl font-extrabold text-zinc-950">{role.subtitle}</h4>
+                </div>
+                <span className={`mt-1 h-3.5 w-3.5 rounded-full ${role.accent === 'gold' ? 'bg-[#d6b676]' : 'bg-sky-400'}`} />
+              </div>
+
+              <div className="mt-5 grid gap-5 md:grid-cols-[1fr_0.9fr]">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">Responsibilities</p>
+                  <ul className="mt-3 space-y-2 text-sm leading-6 text-zinc-700">
+                    {role.responsibilities.map((item) => (
+                      <li key={item} className="flex gap-2">
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">Access</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {role.access.map((item) => (
+                      <span key={item} className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold text-zinc-700">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+
+                  <p className="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">Restrictions</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {role.restrictions.map((item) => (
+                      <span
+                        key={item}
+                        className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700"
+                      >
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -625,6 +966,15 @@ export function SuperAdminPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const exportBlueprintPdf = () => {
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.write(buildBlueprintPrintHtml());
+    win.document.close();
+    win.focus();
+    win.print();
   };
 
   const activeTab = tabs.find((item) => item.key === tab) || tabs[0];
@@ -1019,6 +1369,31 @@ export function SuperAdminPage() {
                 </section>
               </aside>
             </div>
+          ) : null}
+
+          {tab === 'blueprint' ? (
+            <section className="space-y-5">
+              <div className="flex flex-col gap-4 rounded-[2rem] border border-gold/20 bg-[#0a0f14] p-5 shadow-halo md:flex-row md:items-center md:justify-between md:p-6">
+                <div>
+                  <p className={label}>Business Blueprint</p>
+                  <h3 className="mt-1 font-display text-3xl text-white">Printable internal workflow map</h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+                    This view mirrors the PDF-style document you shared: workflow, business flow, and the role split
+                    between Super Admin and Product Master Admin.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={exportBlueprintPdf}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-gold-cta px-5 py-3 text-sm font-extrabold text-black shadow-gold hover:brightness-110"
+                >
+                  <Printer size={16} />
+                  Export PDF
+                </button>
+              </div>
+
+              <BlueprintDocument onExport={exportBlueprintPdf} />
+            </section>
           ) : null}
 
           {tab === 'admins' ? (
