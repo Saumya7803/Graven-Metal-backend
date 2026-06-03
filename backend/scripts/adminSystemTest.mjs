@@ -210,6 +210,45 @@ const run = async () => {
     assertStatus(updatedRoleLogin, 200, 'role change candidate relogin');
     assertTruthy(updatedRoleLogin.body?.user?.role === 'developer', 'updated role is developer after relogin');
 
+    const dataEntryCandidate = await request(app)
+      .post('/api/super-admin/admins')
+      .set('Authorization', `Bearer ${superToken}`)
+      .send({
+        name: 'Data Entry Candidate',
+        email: 'data-entry-change@graven.test',
+        password: 'Password123',
+        role: 'data_entry',
+      });
+    assertStatus(dataEntryCandidate, 201, 'create data entry candidate');
+    const dataEntryCandidateId = dataEntryCandidate.body?.id;
+    assertTruthy(dataEntryCandidateId, 'data entry candidate id');
+
+    const initialDataEntryLogin = await request(app)
+      .post('/api/auth/login/admin')
+      .send({ email: 'data-entry-change@graven.test', password: 'Password123' });
+    assertStatus(initialDataEntryLogin, 200, 'data entry candidate initial login');
+    const initialDataEntryToken = initialDataEntryLogin.body?.token;
+    assertTruthy(initialDataEntryToken, 'initial data entry token');
+    assertTruthy(initialDataEntryLogin.body?.user?.role === 'data_entry', 'initial role is data_entry');
+
+    const dataEntryRoleUpdate = await request(app)
+      .patch(`/api/super-admin/users/${dataEntryCandidateId}`)
+      .set('Authorization', `Bearer ${superToken}`)
+      .send({ role: 'admin' });
+    assertStatus(dataEntryRoleUpdate, 200, 'role update to admin');
+    assertTruthy(dataEntryRoleUpdate.body?.role === 'admin', 'updated role response is admin');
+
+    const revokedDataEntrySession = await request(app)
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${initialDataEntryToken}`);
+    assertStatus(revokedDataEntrySession, 401, 'old data entry session revoked after role update');
+
+    const updatedDataEntryLogin = await request(app)
+      .post('/api/auth/login/admin')
+      .send({ email: 'data-entry-change@graven.test', password: 'Password123' });
+    assertStatus(updatedDataEntryLogin, 200, 'data entry candidate relogin');
+    assertTruthy(updatedDataEntryLogin.body?.user?.role === 'admin', 'updated role is admin after relogin');
+
     const assignPerms = await request(app)
       .patch(`/api/super-admin/admins/${createdAdminId}/permissions`)
       .set('Authorization', `Bearer ${superToken}`)
