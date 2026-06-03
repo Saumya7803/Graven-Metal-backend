@@ -21,7 +21,7 @@ export const companyDetails = {
 };
 
 export const demoCategories: ApiCategory[] = [
-  { _id: 'cat-copper', name: 'Copper', slug: 'copper', description: 'Conductive copper wire, rods, cathodes, bars, and flats.', productCount: 5 },
+  { _id: 'cat-copper', name: 'Copper', slug: 'copper', description: 'Conductive copper wire, rods, cathodes, bars, flats, pipes, and tubes.', productCount: 7 },
   { _id: 'cat-steel', name: 'Steel', slug: 'steel', description: 'Hot rolled coils and industrial steel forms.', productCount: 1 },
   { _id: 'cat-aluminium', name: 'Aluminium', slug: 'aluminium', description: 'Primary and secondary aluminium supply.', productCount: 1 },
   { _id: 'cat-brass', name: 'Brass', slug: 'brass', description: 'Precision brass rods, tubes, and sheets.', productCount: 1 },
@@ -187,6 +187,38 @@ export const demoProducts: ApiProduct[] = [
     image: { url: demoProductImageByCategory.copper },
     category: { _id: categoryMap.copper._id, name: categoryMap.copper.name, slug: categoryMap.copper.slug },
   },
+  {
+    _id: 'prd-copper-pipes',
+    name: 'Copper Pipes',
+    slug: 'copper-pipes',
+    description: 'Copper pipes for plumbing, HVAC, and industrial fluid systems.',
+    price: 812,
+    currency: 'INR',
+    unit: 'kg',
+    unitType: 'Pipe',
+    weightPerUnit: 10,
+    moq: 5,
+    stockQty: 130,
+    inStock: true,
+    image: { url: demoProductImageByCategory.copper },
+    category: { _id: categoryMap.copper._id, name: categoryMap.copper.name, slug: categoryMap.copper.slug },
+  },
+  {
+    _id: 'prd-copper-tubes',
+    name: 'Copper Tubes',
+    slug: 'copper-tubes',
+    description: 'Copper tubes for heat exchange, cooling, and precision assemblies.',
+    price: 820,
+    currency: 'INR',
+    unit: 'kg',
+    unitType: 'Tube',
+    weightPerUnit: 10,
+    moq: 5,
+    stockQty: 145,
+    inStock: true,
+    image: { url: demoProductImageByCategory.copper },
+    category: { _id: categoryMap.copper._id, name: categoryMap.copper.name, slug: categoryMap.copper.slug },
+  },
 ];
 
 export const demoBlogs: ApiBlog[] = [
@@ -283,4 +315,6 @@ export const demoLiveRows = [
   { metal: 'Copper Bus Bars', unit: '/ Kg', price: 845, change: 0.52 },
   { metal: 'Copper Round Bars', unit: '/ Kg', price: 832, change: -0.12 },
   { metal: 'Copper Flats', unit: '/ Kg', price: 818, change: 0.34 },
+  { metal: 'Copper Pipes', unit: '/ Kg', price: 812, change: 0.28 },
+  { metal: 'Copper Tubes', unit: '/ Kg', price: 820, change: 0.41 },
 ];

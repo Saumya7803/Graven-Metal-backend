@@ -71,6 +71,22 @@ export const products = [
     desc: 'Copper flats for fabrication, earthing, and connector systems.',
     tint: 'from-orange-400/35 to-orange-700/20',
   },
+  {
+    id: 'copper-pipes',
+    name: 'Copper Pipes',
+    category: 'Copper',
+    price: '$8,120 / Pipe',
+    desc: 'Copper pipes for plumbing, HVAC, and industrial fluid systems.',
+    tint: 'from-orange-400/35 to-orange-700/20',
+  },
+  {
+    id: 'copper-tubes',
+    name: 'Copper Tubes',
+    category: 'Copper',
+    price: '$8,200 / Tube',
+    desc: 'Copper tubes for heat exchange, cooling, and precision assemblies.',
+    tint: 'from-orange-400/35 to-orange-700/20',
+  },
 ];
 
 export const faq = [
