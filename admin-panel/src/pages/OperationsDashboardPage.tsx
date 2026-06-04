@@ -671,48 +671,52 @@ const configs: Record<DashboardKind, DashboardConfig> = {
       'Dispatch starts when the order is ready, moves into packaging, then goes out through dispatch and live courier tracking until delivery is confirmed.',
   },
   finance: {
-    title: 'Finance Dashboard',
-    eyebrow: 'Accounts & Collections',
+    title: 'Finance Team Control',
+    eyebrow: 'Finance Team',
     route: '/finance',
     roleLabel: 'Finance',
     theme: roleThemes.finance,
     primaryColumn: 'Invoice',
-    detailColumn: 'Finance Work',
+    detailColumn: 'Collections Workflow',
     stats: [
-      { label: 'Invoices', value: '18', helper: 'Ready or issued', icon: FileText, tone: 'blue' },
-      { label: 'Collections', value: '12', helper: 'Payments received', icon: ClipboardList, tone: 'green' },
-      { label: 'Receivables', value: '7', helper: 'Outstanding balances', icon: Mail, tone: 'gold' },
-      { label: 'Margin Review', value: '4', helper: 'Profit checks pending', icon: TrendingUp, tone: 'violet' },
+      { label: 'Invoices', value: '18', helper: 'Ready to issue', icon: FileText, tone: 'blue' },
+      { label: 'Payment Collection', value: '12', helper: 'Cash collection in progress', icon: ClipboardList, tone: 'green' },
+      { label: 'Receivable Tracking', value: '7', helper: 'Outstanding balances monitored', icon: Mail, tone: 'gold' },
+      { label: 'Accounts', value: '9', helper: 'Reconciliation and closure', icon: Users, tone: 'violet' },
     ],
     statuses: [
-      { label: 'Pending', value: 18, tone: 'gold' },
-      { label: 'Issued', value: 12, tone: 'blue' },
-      { label: 'Part Paid', value: 7, tone: 'red' },
+      { label: 'Invoice', value: 18, tone: 'blue' },
+      { label: 'Payment Collection', value: 12, tone: 'green' },
+      { label: 'Receivable Tracking', value: 7, tone: 'gold' },
       { label: 'Cleared', value: 22, tone: 'green' },
     ],
     modules: [
-      { key: 'overview', label: 'Dashboard Overview', icon: BarChart3, metric: '88%', helper: 'Collection health' },
-      { key: 'invoice-queue', label: 'Invoice Queue', icon: FileText, metric: '18', helper: 'Pending invoices' },
-      { key: 'payments', label: 'Payments', icon: ClipboardList, metric: '12', helper: 'Received / due' },
-      { key: 'receivables', label: 'Receivables', icon: Mail, metric: '7', helper: 'Outstanding balances' },
-      { key: 'accounts', label: 'Accounts', icon: Users, metric: '9', helper: 'Account closure' },
+      { key: 'overview', label: 'Finance Team', icon: BarChart3, metric: '88%', helper: 'Collection health' },
+      { key: 'invoice-queue', label: 'Invoices', icon: FileText, metric: '18', helper: 'Invoices to issue' },
+      { key: 'payments', label: 'Payment Collection', icon: ClipboardList, metric: '12', helper: 'Payments received / due' },
+      { key: 'receivables', label: 'Receivable Tracking', icon: Mail, metric: '7', helper: 'Outstanding balances' },
+      { key: 'accounts', label: 'Accounts', icon: Users, metric: '9', helper: 'Reconciliation and closeout' },
       { key: 'finance-reports', label: 'Finance Reports', icon: FileSpreadsheet, metric: '10', helper: 'Report exports' },
       { key: 'profit-analysis', label: 'Profit Analysis', icon: TrendingUp, metric: '4', helper: 'Margin insight' },
       { key: 'margin-analysis', label: 'Margin Analysis', icon: Target, metric: '6', helper: 'Margin review' },
     ],
     rows: [
-      { account: 'Pioneer Infra', owner: 'Anika', detail: 'Invoice pending release', status: 'Pending', next: 'Issue invoice', value: '₹42L' },
-      { account: 'Vertex Components', owner: 'Meera', detail: 'Payment received partially', status: 'Part Paid', next: 'Collect balance', value: '₹18L' },
-      { account: 'Apex Rail Systems', owner: 'Rohan', detail: 'Receivable overdue by 4 days', status: 'Issued', next: 'Reminder call', value: '₹27L' },
-      { account: 'Kavya Electricals', owner: 'Kabir', detail: 'Invoice closed and matched', status: 'Cleared', next: 'Update ledger', value: 'Done' },
+      { account: 'Pioneer Infra', owner: 'Anika', detail: 'Invoice ready for release', status: 'Invoice', next: 'Send invoice', value: '₹42L' },
+      { account: 'Vertex Components', owner: 'Meera', detail: 'Payment collection in progress', status: 'Payment Collection', next: 'Follow up on payment', value: '₹18L' },
+      { account: 'Apex Rail Systems', owner: 'Rohan', detail: 'Receivable tracking overdue by 4 days', status: 'Receivable Tracking', next: 'Reminder call', value: '₹27L' },
+      { account: 'Kavya Electricals', owner: 'Kabir', detail: 'Account reconciliation completed', status: 'Cleared', next: 'Close ledger', value: 'Done' },
     ],
     activity: [
-      'Invoice queue updated for Pioneer Infra',
-      'Vertex Components payment partially cleared',
+      'Pioneer Infra invoice moved into the issue queue',
+      'Vertex Components payment collection follow-up logged',
       'Apex Rail Systems receivable reminder logged',
-      'Kavya Electricals ledger update completed',
+      'Kavya Electricals account reconciliation completed',
     ],
-    priorities: ['Issue pending invoices', 'Collect receivables', 'Review margin analysis', 'Close cleared accounts'],
+    priorities: ['Issue invoices', 'Collect payments', 'Track receivables', 'Close accounts'],
+    responsibilities: ['Invoice Release', 'Payment Collection', 'Receivable Tracking', 'Account Reconciliation'],
+    workflow: ['Invoice', 'Payment Collection', 'Receivable Tracking'],
+    playbook:
+      'Finance starts with invoice issuance, follows through on payment collection, and then keeps receivables under watch until the account is cleared.',
   },
 };
 
@@ -747,9 +751,9 @@ function StatusChip({ status }: { status: string }) {
   const tone: Tone =
     status === 'Hot' || status === 'At Risk' || status === 'Rejected' || status === 'Lost'
       ? 'red'
-      : status === 'Warm' || status === 'RFQ' || status === 'Requested' || status === 'Awaiting Price' || status === 'Need More Information' || status === 'Pricing' || status === 'Final Cost' || status === 'Packaging'
+      : status === 'Warm' || status === 'RFQ' || status === 'Requested' || status === 'Awaiting Price' || status === 'Need More Information' || status === 'Pricing' || status === 'Final Cost' || status === 'Packaging' || status === 'Receivable Tracking' || status === 'Invoice'
         ? 'gold'
-        : status === 'Approved' || status === 'Order' || status === 'Qualified' || status === 'Assigned To Sales' || status === 'New' || status === 'Follow-Up' || status === 'Won' || status === 'Purchase Order' || status === 'Sales Order' || status === 'Order Ready' || status === 'Delivered'
+        : status === 'Approved' || status === 'Order' || status === 'Qualified' || status === 'Assigned To Sales' || status === 'New' || status === 'Follow-Up' || status === 'Won' || status === 'Purchase Order' || status === 'Sales Order' || status === 'Order Ready' || status === 'Delivered' || status === 'Payment Collection' || status === 'Cleared'
           ? 'green'
         : status === 'Negotiation' || status === 'Supplier Quotation' || status === 'Dispatch'
             ? 'violet'
@@ -1850,7 +1854,7 @@ function ModuleWorkspace(props: WorkspaceProps) {
   if (['qualification', 'cost-analysis', 'pricing-intelligence'].includes(activeModule)) {
     return <ScorecardWorkspace {...props} />;
   }
-  if (['lead-status', 'negotiation-tracking', 'vendor-comparison', 'approval-queue', 'margin-review', 'cost-review', 'target-price-review', 'commercial-approval', 'pricing-approval', 'sourcing-approval', 'approval-history', 'inventory-dashboard', 'dispatch-dashboard', 'logistics', 'courier-tracking', 'invoice-queue', 'orders', 'approved-suppliers', 'supplier-quotations', 'rfqs'].includes(activeModule)) {
+  if (['lead-status', 'negotiation-tracking', 'vendor-comparison', 'approval-queue', 'margin-review', 'cost-review', 'target-price-review', 'commercial-approval', 'pricing-approval', 'sourcing-approval', 'approval-history', 'inventory-dashboard', 'dispatch-dashboard', 'logistics', 'courier-tracking', 'invoice-queue', 'payments', 'receivables', 'accounts', 'orders', 'approved-suppliers', 'supplier-quotations', 'rfqs'].includes(activeModule)) {
     return <BoardWorkspace {...props} />;
   }
   if (['follow-ups', 'supplier-communication', 'tasks'].includes(activeModule)) return <FollowUpWorkspace {...props} />;

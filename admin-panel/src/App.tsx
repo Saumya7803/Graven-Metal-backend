@@ -102,7 +102,7 @@ const router = createBrowserRouter([
   {
     path: '/inventory',
     element: withSuspense(
-      <ProtectedRoute allowedRoles={['inventory', 'super_admin']}>
+      <ProtectedRoute allowedRoles={['inventory', 'admin', 'super_admin']}>
         <OperationsDashboardPage kind="inventory" />
       </ProtectedRoute>
     ),

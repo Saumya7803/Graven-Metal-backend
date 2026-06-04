@@ -342,7 +342,7 @@ const run = async () => {
       .set('Authorization', `Bearer ${procurementToken}`);
     assertStatus(procurementDashboard, 200, 'procurement dashboard api');
     assertTruthy(
-      procurementDashboard.body?.rows?.some((row) => `${row.id}` === `${procurementRecordId}` && row.status === 'Quoted'),
+      procurementDashboard.body?.rows?.some((row) => `${row.id}` === `${procurementRecordId}` && row.status === 'Supplier Quotation'),
       'procurement dashboard reflects record update'
     );
 

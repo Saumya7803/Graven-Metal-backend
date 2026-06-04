@@ -19,7 +19,7 @@ import { authorize, protect } from '../middlewares/authMiddleware.js';
 import { validate } from '../middlewares/validateMiddleware.js';
 
 const router = Router();
-const teamRoles = ['super_admin', 'lqt', 'sales', 'procurement', 'cct', 'inventory', 'dispatch', 'finance'];
+const teamRoles = ['super_admin', 'admin', 'lqt', 'sales', 'procurement', 'cct', 'inventory', 'dispatch', 'finance'];
 const quoteModules = [
   'overview',
   'new-leads',

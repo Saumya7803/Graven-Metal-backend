@@ -148,6 +148,7 @@ function normalizeSalesWorkflowStatus(status) {
 
 function assertTeamAccess(req, team) {
   if (req.user.role === 'super_admin') return null;
+  if (team === 'inventory' && req.user.role === 'admin') return null;
   if (req.user.role !== team) return 'Forbidden: team dashboard access denied';
   return null;
 }
