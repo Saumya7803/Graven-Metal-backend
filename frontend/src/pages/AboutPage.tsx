@@ -2,7 +2,6 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Award, Eye, ShieldCheck, Target, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { MotionReveal } from '../components/MotionReveal';
-import { BrandLogo } from '../components/BrandLogo';
 import { SEO } from '../components/seo/SEO';
 import { companyDetails } from '../data/demoContent';
 
@@ -51,39 +50,6 @@ export function AboutPage() {
 
           <div className="relative mx-auto max-w-[1600px] px-4 pb-10 pt-4 sm:px-6 lg:px-8">
             <div className="rounded-[1.8rem] border border-white/10 bg-black/18 backdrop-blur-md">
-              <div className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-3 text-[11px] uppercase tracking-[0.22em] text-zinc-400 sm:px-6">
-                <p className="hidden sm:block">India&apos;s fastest growing industrial supply company.</p>
-                <p className="sm:hidden">Industrial supply company.</p>
-                <div className="flex items-center gap-4 text-zinc-300 normal-case tracking-normal">
-                  <a href="tel:+917905350134" className="transition hover:text-gold">
-                    +91 79053 50134
-                  </a>
-                  <a href="mailto:info@gravenmetal.com" className="transition hover:text-gold">
-                    info@gravenmetal.com
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex flex-col border-b border-white/10 px-4 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex items-center gap-4">
-                  <BrandLogo className="h-10 sm:h-11" />
-                </div>
-                <div className="mt-4 flex flex-wrap items-center gap-3 lg:mt-0">
-                  <Link
-                    to="/quote-request"
-                    className="inline-flex items-center justify-center rounded-xl bg-gold-cta px-7 py-3 text-sm font-bold uppercase tracking-[0.16em] text-black shadow-gold transition hover:brightness-110"
-                  >
-                    Request Quote
-                  </Link>
-                  <Link
-                    to="/auth"
-                    className="inline-flex items-center justify-center rounded-xl border border-gold/35 px-7 py-3 text-sm font-bold uppercase tracking-[0.16em] text-gold transition hover:bg-gold/10"
-                  >
-                    Login
-                  </Link>
-                </div>
-              </div>
-
               <div className="grid gap-8 px-4 py-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:px-6 lg:py-12">
                 <div className="relative overflow-hidden rounded-[2rem] border border-gold/15 bg-[#070b10] p-8 shadow-[0_0_0_1px_rgba(214,176,92,0.05),0_20px_60px_rgba(0,0,0,0.35)] sm:p-10">
                   <div className="absolute inset-0">
@@ -93,11 +59,15 @@ export function AboutPage() {
                     <div className="absolute right-[8%] top-[-8%] h-[120%] w-px rotate-[24deg] bg-gradient-to-b from-transparent via-gold/75 to-transparent" />
                   </div>
 
-                  <div className="relative flex min-h-[430px] flex-col items-center justify-center text-center sm:min-h-[520px]">
-                    <div className="rounded-full border border-gold/15 bg-black/35 p-6 shadow-[0_0_40px_rgba(214,176,92,0.08)]">
-                      <img src="/imgs/brand-mark.png" alt="Graven Metal logo" className="h-36 w-36 object-contain sm:h-44 sm:w-44" />
+                  <div className="relative flex min-h-[520px] flex-col items-center justify-center py-6 text-center sm:min-h-[620px]">
+                    <div className="mx-auto rounded-full border border-gold/15 bg-black/35 p-7 shadow-[0_0_40px_rgba(214,176,92,0.08)]">
+                      <img
+                        src="/imgs/brand-mark.png"
+                        alt="Graven Metal logo"
+                        className="h-36 w-36 object-contain sm:h-44 sm:w-44"
+                      />
                     </div>
-                    <div className="mt-7">
+                    <div className="mt-8">
                       <h2 className="text-4xl font-black tracking-[0.18em] text-white sm:text-5xl">GRAVEN</h2>
                       <p className="mt-2 text-xl font-medium tracking-[0.34em] text-zinc-200 sm:text-2xl">METAL</p>
                     </div>
