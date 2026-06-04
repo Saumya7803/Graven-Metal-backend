@@ -68,7 +68,7 @@ export function ContactPage() {
     <div className="bg-[#03070b]">
       <SEO
         title="Contact"
-        description="Contact GRAVEN METAL for industrial automation solutions, project support, and quotes."
+        description="Contact GRAVEN METAL for premium metal products, industrial materials, and project quotes."
         path="/contact"
       />
       <MotionReveal>
@@ -92,7 +92,7 @@ export function ContactPage() {
                 Get In Touch
               </h1>
               <p className="mt-5 max-w-md text-base leading-7 text-zinc-300 sm:text-lg">
-                We are here to help with industrial automation requirements, spare parts support, and fast quotes.
+                We are here to help with premium metal products, industrial materials, and fast quotes.
               </p>
 
               <div className="mt-6 grid gap-3 text-sm">

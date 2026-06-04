@@ -49,8 +49,9 @@ export function Footer() {
         <div>
           <BrandLogo className="h-10" />
           <p className="mt-3 max-w-[16.5rem] text-sm leading-7 text-zinc-300">
-            GRAVEN METAL provides industrial automation solutions and spare parts support to improve production
-            efficiency, precision, and reliability.
+            GRAVEN METAL provides premium metal products and industrial materials for manufacturing, engineering,
+            and construction industries. We are committed to quality, reliability, and timely delivery for every
+            project.
           </p>
         </div>
 

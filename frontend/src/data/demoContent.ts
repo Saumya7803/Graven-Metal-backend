@@ -11,7 +11,7 @@ export const companyDetails = {
   supportPhone: '+9179053 50134',
   certifications: ['Industrial Automation Solutions', 'International Spare Parts Supply', 'Process Optimization', 'Quick Technical Support'],
   intro:
-    'GRAVEN METAL delivers industrial automation solutions and international spare parts support for modern manufacturing and production businesses.',
+    'GRAVEN METAL provides premium metal products and industrial materials for manufacturing, engineering, and construction industries. We are committed to quality, reliability, and timely delivery for every project.',
   mission:
     'Empower businesses with reliable automation solutions that improve efficiency, precision, and operational performance.',
   vision:

@@ -58,8 +58,9 @@ export function AboutPage() {
                   Delivering Excellence.
                 </h1>
                 <p className="mt-5 max-w-md text-base leading-7 text-zinc-300 sm:text-lg">
-                  GRAVEN METAL delivers industrial automation solutions tailored for modern manufacturing,
-                  helping businesses improve efficiency, precision, and reliability at scale.
+                  GRAVEN METAL provides premium metal products and industrial materials for manufacturing,
+                  engineering, and construction industries. We are committed to quality, reliability, and timely
+                  delivery for every project.
                 </p>
                 <p className="mt-4 text-sm font-medium text-zinc-300">
                   Trusted by global industries and manufacturing leaders.
