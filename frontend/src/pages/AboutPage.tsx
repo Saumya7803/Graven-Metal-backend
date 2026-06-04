@@ -42,8 +42,20 @@ export function AboutPage() {
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,7,11,0.14)_0%,rgba(3,7,11,0.68)_60%,rgba(3,7,11,0.96)_100%)]" />
 
           <div className="relative z-10 mx-auto flex max-w-[1600px] flex-col px-4 py-6 sm:px-6 lg:min-h-[calc(100svh-121px)] lg:px-8">
-            <div className="grid flex-1 gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch">
-              <div className="flex flex-col items-center justify-center py-8 text-center lg:min-h-[74vh] lg:py-0 lg:pr-10 xl:pr-16">
+            <div className="relative flex flex-1 items-center justify-center">
+              <div className="absolute inset-y-0 right-0 hidden w-[46%] overflow-hidden lg:block">
+                <img
+                  src="/imgs/about-page-logo.jpeg"
+                  alt="Molten metal pouring in a foundry"
+                  className="absolute inset-0 h-full w-full object-cover object-right"
+                  decoding="async"
+                  fetchPriority="high"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,7,11,0.98)_0%,rgba(4,7,11,0.68)_38%,rgba(4,7,11,0.12)_68%,rgba(4,7,11,0)_100%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,7,11,0.08)_0%,rgba(4,7,11,0.3)_56%,rgba(4,7,11,0.82)_100%)]" />
+              </div>
+
+              <div className="relative z-10 flex w-full max-w-[900px] flex-col items-center justify-center py-8 text-center lg:min-h-[74vh] lg:py-0">
                 <p className="text-sm text-zinc-500">Home / About Us</p>
                 <p className="mt-6 text-xs font-bold uppercase tracking-[0.22em] text-gold">About Graven Metal</p>
                 <h1 className="mx-auto mt-4 max-w-[10ch] text-4xl font-extrabold leading-[1.05] text-white sm:text-5xl lg:text-6xl xl:text-[4.75rem]">
@@ -61,10 +73,10 @@ export function AboutPage() {
                   {heroStats.map((stat) => {
                     const Icon = stat.icon;
                     return (
-                    <div
-                      key={stat.label}
-                      className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/18 px-4 py-3 text-left"
-                    >
+                      <div
+                        key={stat.label}
+                        className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/18 px-4 py-3 text-left"
+                      >
                         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-gold/25 bg-gold/10 text-gold">
                           <Icon size={17} />
                         </span>
@@ -87,18 +99,18 @@ export function AboutPage() {
                   </Link>
                 </div>
               </div>
+            </div>
 
-              <div className="relative min-h-[32vh] overflow-hidden sm:min-h-[42vh] lg:min-h-[74vh]">
-                <img
-                  src="/imgs/about-page-logo.jpeg"
-                  alt="Molten metal pouring in a foundry"
-                  className="absolute inset-0 h-full w-full object-cover object-right"
-                  decoding="async"
-                  fetchPriority="high"
-                />
-                <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,7,11,0.98)_0%,rgba(4,7,11,0.68)_38%,rgba(4,7,11,0.12)_68%,rgba(4,7,11,0)_100%)]" />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,7,11,0.08)_0%,rgba(4,7,11,0.3)_56%,rgba(4,7,11,0.82)_100%)]" />
-              </div>
+            <div className="relative mt-8 h-[32vh] overflow-hidden sm:h-[42vh] lg:hidden">
+              <img
+                src="/imgs/about-page-logo.jpeg"
+                alt="Molten metal pouring in a foundry"
+                className="absolute inset-0 h-full w-full object-cover object-right"
+                decoding="async"
+                fetchPriority="high"
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,7,11,0.98)_0%,rgba(4,7,11,0.68)_38%,rgba(4,7,11,0.12)_68%,rgba(4,7,11,0)_100%)]" />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,7,11,0.08)_0%,rgba(4,7,11,0.3)_56%,rgba(4,7,11,0.82)_100%)]" />
             </div>
 
             <div className="grid gap-4 pb-3 pt-8 sm:grid-cols-3">
